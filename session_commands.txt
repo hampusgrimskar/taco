@@ -1,0 +1,16 @@
+
+CREATE NEW SESSION:
+	screen -S <session_name>
+
+DETACH FROM A SESSION:
+	screen -d <session_name>
+	
+ATTACH TO A SESSION:
+	screen -r <session_name>
+
+
+DELETE A SESSION:
+	screen -X -S <session_name> quit
+
+LIST SESSIONS:
+	screen -ls

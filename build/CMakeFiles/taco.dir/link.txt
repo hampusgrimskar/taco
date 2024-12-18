@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/taco.dir/src/main.cpp.o CMakeFiles/taco.dir/src/Session.cpp.o -o taco 

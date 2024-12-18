@@ -1,0 +1,3 @@
+/home/egriham/misc/taco/build/CMakeFiles/taco.dir
+/home/egriham/misc/taco/build/CMakeFiles/edit_cache.dir
+/home/egriham/misc/taco/build/CMakeFiles/rebuild_cache.dir

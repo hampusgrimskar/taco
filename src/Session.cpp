@@ -1,8 +1,9 @@
 #include "Session.h"
 
-Session::Session(const char* session_name) 
+Session::Session(const char* session_name, const char* repository_name) 
 {
     this->mySessionName = session_name;
+    this->myRepositoryName = repository_name;
 
     // Start new terminal session
     try 
@@ -63,7 +64,16 @@ void Session::detach()
 void Session::executeCommand(ScreenCommand command_type)
 {
     char f_command[250];
-    sprintf(f_command, getCommand(command_type), mySessionName);
+
+    if (command_type == CREATE_SESSION)
+    {
+        sprintf(f_command, getCommand(command_type), mySessionName, myRepositoryName);
+    }
+    else
+    {
+        sprintf(f_command, getCommand(command_type), mySessionName);
+    }
+
     system(f_command);
 }
 

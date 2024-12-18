@@ -41,16 +41,13 @@ int main(int argc, char* argv[]) {
 
     handleArguments(argc, argv);
 
-    // Session session("test");
+    Session session("test", "~/repos");
     // session.detach();
 
-    // std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
-    // while(true)
-    // {
-    //     if (getchar() == 'q')
-    //     {
-    //         break;
-    //     }
-    // }
+    std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
+    while(true)
+    {
+        if (getchar() == 'q') break;
+    }
     return 0;
 }

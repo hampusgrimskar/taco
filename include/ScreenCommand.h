@@ -3,7 +3,7 @@
 
 namespace ScreenConstants
 {
-    inline const char* CREATE_SESSION_COMMAND = "screen -S %s";
+    inline const char* CREATE_SESSION_COMMAND = "screen -S %s bash -c \"cd %s && exec bash\"";
     inline const char* ATTACH_TO_SESSION_COMMAND = "screen -r %s";
     inline const char* DETACH_SESSION_COMMAND = "screen -d %s";
     inline const char* TERMINATE_SESSION_COMMAND = "screen -X -S %s quit";

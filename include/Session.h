@@ -9,6 +9,7 @@ class Session
 {
 private:
     const char* mySessionName;
+    const char* myRepositoryName;
 
     bool myIsRunning;
 
@@ -17,7 +18,7 @@ private:
     void handleError(const std::exception& e);
 
 public:
-    Session(const char* session_name);
+    Session(const char* session_name, const char* repository_name);
 
     ~Session();
 

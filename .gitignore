@@ -30,7 +30,14 @@
 *.exe
 *.out
 *.app
-/build/taco
+bin/
+
+# Cmake files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+install_manifest.txt
 
 # vscode settings
 .vscode

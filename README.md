@@ -4,4 +4,4 @@
 
 To build project binaries run the following command:
 
-    cmake . && make install
+    cmake . && make

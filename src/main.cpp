@@ -4,11 +4,14 @@
 #include <cstdlib>
 #include <string>
 #include <cstring>
+#include "cxxopts.hpp"
 
-std::string FORWARD_SLASH = "/";
-std::string DOT = ".";
-std::string USER = std::getenv("USER");
-std::string TACO_CONFIG_DIR = FORWARD_SLASH + "home" + FORWARD_SLASH + USER + FORWARD_SLASH + DOT + "taco/";
+const std::string FORWARD_SLASH = "/";
+const std::string DOT = ".";
+const std::string NO_ALIAS = "";
+
+std::string HOME_DIR = std::getenv("HOME");
+std::string TACO_CONFIG_DIR = HOME_DIR + FORWARD_SLASH + DOT + "taco/";
 std::string TACO_CONFIG_FILE = TACO_CONFIG_DIR + "repositories";
 
 void initializeConfigurationFiles()
@@ -24,30 +27,140 @@ void initializeConfigurationFiles()
     }
 }
 
-void handleArguments(int argc, char** argv)
-{ 
-    if (argc == 2 && std::strcmp(argv[1], "init") == 0)
+std::unordered_map<std::string, std::string> getReposFromConfigFile()
+{
+    std::ifstream file(TACO_CONFIG_FILE);
+    std::string line;
+    std::unordered_map<std::string, std::string> repos;
+    while (getline(file, line))
     {
-        std::string pwd = std::getenv("PWD");
-        std::ofstream file(TACO_CONFIG_FILE, std::ios::app);
+        std::string path;
+        std::string alias;
+
+        int delimiter_index = line.find('#');
+        if (delimiter_index != -1)
+        {
+            path = line.substr(0, delimiter_index);
+            alias = line.substr(delimiter_index + 1, line.length());
+        }
+        else
+        {
+            path = line;
+            alias = NO_ALIAS;
+        }
+
+        repos.emplace(path, alias);
+    }
+    file.close();
+    return repos;
+}
+
+bool isRepoInitialized(const std::string &path)
+{
+    std::ifstream file(TACO_CONFIG_FILE);
+    std::string line;
+    while (getline(file, line))
+    {
+        int delimiter_index = line.find('#');
+        if (delimiter_index != -1)
+            line = line.substr(0, delimiter_index);
+
+        if (line == path)
+        {
+            file.close();
+            return true;
+        }
+    }
+    file.close();
+    return false;
+}
+
+void exitWithError(const std::string &message)
+{
+    std::cout << "Error: " + message << std::endl;
+    exit(EXIT_FAILURE);
+}
+
+void handleInit(const cxxopts::ParseResult &result)
+{
+    std::string pwd = std::getenv("PWD");
+    std::ofstream file(TACO_CONFIG_FILE, std::ios::app);
+
+    if (isRepoInitialized(pwd))
+        exitWithError("directory " + pwd + " is already initialized!");
+
+    // Add alias if alias option was set
+    if (result.contains("alias"))
+    {
+        file << pwd + "#" + result["alias"].as<std::string>() << std::endl;
+    }
+
+    else
+    {
         file << pwd << std::endl;
-        file.close();
+    }
+
+    file.close();
+}
+
+std::pair<std::string, std::string> chooseRepo()
+{
+    // TEMPORARY CODE FOR TESTING
+    std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
+    int menu_counter = 0;
+    std::vector<std::pair<std::string, std::string>> options;
+
+    for (auto repo : getReposFromConfigFile())
+    {
+        std::string name = repo.second != NO_ALIAS ? repo.second : repo.first;
+        std::cout << menu_counter++ << ": " + name << std::endl;
+        options.push_back(std::pair(repo.first, repo.second));
+    }
+    int choice = std::stoi(std::string(1, getchar()));
+    std::cout << options.size() << std::endl;
+    return options[choice];
+}
+
+void handleArguments(int argc, char **argv)
+{
+    cxxopts::Options options("taco", "Repository navigator");
+
+    options.add_options()
+    ("h,help", "Show help")
+    ("i,init", "Initialize a directory for taco use")
+    ("a,alias", "Alias to use instead of full path to repository. Can only be used together with init option",
+    cxxopts::value<std::string>());
+
+    cxxopts::ParseResult result = options.parse(argc, argv);
+
+    if (result["help"].as<bool>())
+    {
+        std::cout << options.help() << std::endl;
+        exit(0);
+    }
+
+    if (result["init"].as<bool>())
+    {
+        handleInit(result);
     }
 }
 
-int main(int argc, char* argv[]) {
-
+int main(int argc, char *argv[])
+{
     initializeConfigurationFiles();
 
     handleArguments(argc, argv);
 
-    Session session("test", "~/repos");
-    // session.detach();
+    std::pair<std::string, std::string> repo = chooseRepo();
+    std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
+    std::replace(session_name.begin(), session_name.end(), '/', '_');
+    Session session(session_name.c_str(), repo.first.c_str());
 
     std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
-    while(true)
+    while (true)
     {
-        if (getchar() == 'q') break;
+        if (getchar() == 'q')
+            break;
     }
     return 0;
 }

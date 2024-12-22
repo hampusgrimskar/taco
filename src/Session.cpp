@@ -1,10 +1,8 @@
 #include "Session.h"
 
 Session::Session(const char* session_name, const char* repository_name) 
+    : mySessionName(session_name), myRepositoryName(repository_name)
 {
-    this->mySessionName = session_name;
-    this->myRepositoryName = repository_name;
-
     // Start new terminal session
     try 
     {
@@ -74,6 +72,7 @@ void Session::executeCommand(ScreenCommand command_type)
         sprintf(f_command, getCommand(command_type), mySessionName);
     }
 
+    std::cout << f_command << std::endl;
     system(f_command);
 }
 

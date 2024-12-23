@@ -117,7 +117,6 @@ std::pair<std::string, std::string> chooseRepo()
         options.push_back(std::pair(repo.first, repo.second));
     }
     int choice = std::stoi(std::string(1, getchar()));
-    std::cout << options.size() << std::endl;
     return options[choice];
 }
 
@@ -152,8 +151,9 @@ int main(int argc, char *argv[])
     handleArguments(argc, argv);
 
     std::pair<std::string, std::string> repo = chooseRepo();
+
     std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
-    std::replace(session_name.begin(), session_name.end(), '/', '_');
+    
     Session session(session_name.c_str(), repo.first.c_str());
 
     std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;

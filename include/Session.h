@@ -4,12 +4,14 @@
 #include <string>
 #include <iostream>
 #include "ScreenCommand.h"
+#include "Utils.h"
 
 class Session 
 {
 private:
     const char* mySessionName;
     const char* myRepositoryName;
+    std::string mySessionId;
 
     bool myIsRunning;
 

@@ -1,4 +1,4 @@
-# TACO
+# Taco
 
 ## Build project from source
 

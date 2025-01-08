@@ -67,7 +67,7 @@ void Session::executeCommand(ScreenCommand command_type)
 
     if (command_type == CREATE_SESSION)
     {
-        sprintf(f_command, getCommand(command_type), mySessionId.c_str(), myRepositoryName);
+        sprintf(f_command, getCommand(command_type), mySessionId.c_str(), mySessionId.c_str(), myRepositoryName);
     }
     else
     {

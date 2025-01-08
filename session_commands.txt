@@ -20,3 +20,15 @@ screen -S test3 -X bindkey ^d detach
 
 run this command AFTER the session has been started.
 it will rebind ctrl+d to detach from session instead of terminating
+
+
+
+Final command for creating new session
+
+The command performs the following:
+- Starts new session
+- binds ctrl+d to detach from session
+- cd into directory
+- launch interactive bash
+
+screen -S test bash -c "screen -S test -X bindkey ^d detach && cd /home/egriham && exec bash"

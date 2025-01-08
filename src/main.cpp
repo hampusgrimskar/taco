@@ -150,17 +150,32 @@ int main(int argc, char *argv[])
 
     handleArguments(argc, argv);
 
-    std::pair<std::string, std::string> repo = chooseRepo();
-
-    std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
-    
-    Session session(session_name.c_str(), repo.first.c_str());
+    Session* session;
+    bool is_session_created = false;
 
     std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
     while (true)
     {
-        if (getchar() == 'q')
-            break;
+        try
+        {
+            std::pair<std::string, std::string> repo = chooseRepo();
+
+            std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
+            
+            if (is_session_created) session->attach();
+            else {
+                session = new Session(session_name.c_str(), repo.first.c_str());
+                is_session_created = true;
+            } 
+
+            if (getchar() == 'q')
+                break;
+        }
+        catch(const std::exception& e)
+        {
+            delete session;
+        }
     }
+    delete session;
     return 0;
 }

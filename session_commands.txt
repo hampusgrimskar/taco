@@ -14,3 +14,9 @@ DELETE A SESSION:
 
 LIST SESSIONS:
 	screen -ls
+
+
+screen -S test3 -X bindkey ^d detach
+
+run this command AFTER the session has been started.
+it will rebind ctrl+d to detach from session instead of terminating

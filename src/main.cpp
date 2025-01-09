@@ -6,6 +6,11 @@
 #include <cstring>
 #include "cxxopts.hpp"
 
+/*
+Probably should move some stuff from
+this file into Utils.h
+*/
+
 const std::string FORWARD_SLASH = "/";
 const std::string DOT = ".";
 const std::string NO_ALIAS = "";

@@ -1,16 +1,15 @@
 #include "Session.h"
 
-Session::Session(const char* session_name, const char* repository_name) : 
-    mySessionName(session_name),
-    myRepositoryName(repository_name),
-    mySessionId(generateId(repository_name))
+Session::Session(const char *session_name, const char *repository_name) : mySessionName(session_name),
+                                                                          myRepositoryName(repository_name),
+                                                                          mySessionId(generateId(repository_name))
 {
     // Start new terminal session
-    try 
+    try
     {
         executeCommand(CREATE_SESSION);
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         myIsRunning = false;
         delete this;
@@ -24,13 +23,14 @@ Session::Session(const char* session_name, const char* repository_name) :
 
 Session::~Session()
 {
-    if (!myIsRunning) return; // Don't cancel terminal session if it was never started
+    if (!myIsRunning)
+        return; // Don't cancel terminal session if it was never started
     try
     {
         executeCommand(TERMINATE_SESSION);
     }
-    catch(const std::exception& e)
-    { 
+    catch (const std::exception &e)
+    {
         handleError(e);
     }
 }
@@ -41,11 +41,10 @@ void Session::attach()
     {
         executeCommand(ATTACH_TO_SESSION);
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         handleError(e);
     }
-    
 }
 
 void Session::detach()
@@ -54,11 +53,10 @@ void Session::detach()
     {
         executeCommand(DETACH_SESSION);
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         handleError(e);
     }
-    
 }
 
 void Session::executeCommand(ScreenCommand command_type)
@@ -67,7 +65,7 @@ void Session::executeCommand(ScreenCommand command_type)
 
     if (command_type == CREATE_SESSION)
     {
-        sprintf(f_command, getCommand(command_type), mySessionId.c_str(), mySessionId.c_str(), myRepositoryName);
+        sprintf(f_command, getCommand(command_type), mySessionId.c_str(), mySessionId.c_str(), mySessionId.c_str(), myRepositoryName);
     }
     else
     {
@@ -78,7 +76,7 @@ void Session::executeCommand(ScreenCommand command_type)
     system(f_command);
 }
 
-void Session::handleError(const std::exception& e)
+void Session::handleError(const std::exception &e)
 {
     // Maybe this method should do other things later,
     // for now just print error

@@ -1,6 +1,7 @@
 #ifndef UTILS
 #define UTILS
 
+#include <stdlib.h>
 #include <iomanip>
 #include <sstream>
 #include <unordered_map>
@@ -16,7 +17,13 @@ inline void exitWithError(const std::string &message)
     exit(EXIT_FAILURE);
 }
 
-inline std::string generateId(const char* input)
+inline void exitWithMessage(const std::string &message, const int status_code)
+{
+    std::cout << message << std::endl;
+    exit(status_code);
+}
+
+inline std::string generateId(const char *input)
 {
     std::stringstream output_stream;
     for (int i = 0; input[i] != NULL_CHARACTER; i++)
@@ -103,18 +110,25 @@ inline void initializeRepository(const cxxopts::ParseResult &result)
     if (isRepoInitialized(pwd))
         exitWithError("directory " + pwd + " is already initialized!");
 
+    std::string message;
+
     // Add alias if alias option was set
     if (result.contains("alias"))
     {
-        file << pwd + "#" + result["alias"].as<std::string>() << std::endl;
+        std::string alias = result["alias"].as<std::string>();
+        file << pwd + "#" + alias << std::endl;
+        message = "Succesfully initialized repository " + pwd + " with alias " + alias;
     }
 
     else
     {
         file << pwd << std::endl;
+        message = "Succesfully initialized repository " + pwd;
     }
 
     file.close();
+
+    exitWithMessage(message, EXIT_SUCCESS);
 }
 
 #endif

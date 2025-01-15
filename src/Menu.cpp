@@ -9,8 +9,6 @@ Menu::Menu()
 		this->repositorySessionMap.push_back(
 			std::make_tuple(session_name, repo.first, nullptr));
 	}
-
-	openMenu();
 }
 
 Menu::~Menu()
@@ -23,6 +21,11 @@ Menu::~Menu()
 	}
 	// Stop Curses window
 	endwin();
+}
+
+void Menu::printTitle()
+{
+	printw("%s\n", TACO_TITLE.c_str());
 }
 
 void Menu::printMenu(WINDOW *menu_win, int highlight)
@@ -49,8 +52,6 @@ void Menu::printMenu(WINDOW *menu_win, int highlight)
 
 void Menu::handleSelection(int selection)
 {
-	printf("You chose %s", std::get<0>(this->repositorySessionMap[selection]).c_str());
-
 	if (std::get<2>(this->repositorySessionMap[selection]) == nullptr)
 	{
 		// If the repository is not currently associated with a sesion,
@@ -59,9 +60,6 @@ void Menu::handleSelection(int selection)
 		const char *alias = std::get<1>(this->repositorySessionMap[selection]).c_str();
 		Session *session = new Session(path, alias);
 		std::get<2>(this->repositorySessionMap[selection]) = session;
-
-		// Attach to the new session
-		// session->attach();
 	}
 	else
 	{
@@ -70,6 +68,9 @@ void Menu::handleSelection(int selection)
 	}
 }
 
+/*
+This method is ugly, needs cleanup in the future
+*/
 void Menu::openMenu()
 {
 	WINDOW *menu_win;
@@ -81,14 +82,14 @@ void Menu::openMenu()
 	start_color();
 	clear();
 	noecho();
-	cbreak(); /* Line buffering disabled. pass on everything */
+	cbreak(); // Line buffering disabled. pass on everything
 	int startx = (80 - 30) / 2;
 	int starty = (24 - 10) / 2;
 
 	curs_set(false);
 	menu_win = newwin(9, 50, 7, 2);
 	keypad(menu_win, TRUE);
-	// printTitle();
+	printTitle();
 	refresh();
 	printMenu(menu_win, highlight);
 	while (1)
@@ -115,14 +116,13 @@ void Menu::openMenu()
 			break;
 		case 27:
 			nodelay(menu_win, true);
-			endwin();
 			break;
 		default:
 			refresh();
 			break;
 		}
 		printMenu(menu_win, highlight);
-		if (choice != -1) /* User did a choice come out of the infinite loop */
+		if (choice != -1) // User did a choice come out of the infinite loop
 			break;
 	}
 	clrtoeol();

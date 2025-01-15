@@ -10,10 +10,11 @@
 class Menu
 {
 private:
-    std::vector<std::tuple<std::string, std::string, Session*>> repositorySessionMap;
+    std::vector<std::tuple<std::string, std::string, Session *>> repositorySessionMap;
+
+    void printTitle();
 
     void printMenu(WINDOW *menu_win, int highlight);
-
 
     void handleSelection(int selection);
 
@@ -23,7 +24,6 @@ public:
     ~Menu();
 
     void openMenu();
-    // void chooseRepo();
 };
 
 #endif

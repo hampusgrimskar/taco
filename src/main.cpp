@@ -5,108 +5,12 @@
 #include <string>
 #include <cstring>
 #include "cxxopts.hpp"
+#include "Menu.h"
 
 /*
 Probably should move some stuff from
 this file into Utils.h
 */
-
-const std::string FORWARD_SLASH = "/";
-const std::string DOT = ".";
-const std::string NO_ALIAS = "";
-
-std::string HOME_DIR = std::getenv("HOME");
-std::string TACO_CONFIG_DIR = HOME_DIR + FORWARD_SLASH + DOT + "taco/";
-std::string TACO_CONFIG_FILE = TACO_CONFIG_DIR + "repositories";
-
-void initializeConfigurationFiles()
-{
-    // Create .taco directory and config file if they don't exist already
-    if (!std::filesystem::exists(TACO_CONFIG_DIR))
-    {
-        std::filesystem::create_directory(TACO_CONFIG_DIR);
-    }
-    if (!std::ifstream(TACO_CONFIG_FILE))
-    {
-        std::ofstream file(TACO_CONFIG_FILE);
-    }
-}
-
-std::unordered_map<std::string, std::string> getReposFromConfigFile()
-{
-    std::ifstream file(TACO_CONFIG_FILE);
-    std::string line;
-    std::unordered_map<std::string, std::string> repos;
-    while (getline(file, line))
-    {
-        std::string path;
-        std::string alias;
-
-        int delimiter_index = line.find('#');
-        if (delimiter_index != -1)
-        {
-            path = line.substr(0, delimiter_index);
-            alias = line.substr(delimiter_index + 1, line.length());
-        }
-        else
-        {
-            path = line;
-            alias = NO_ALIAS;
-        }
-
-        repos.emplace(path, alias);
-    }
-    file.close();
-    return repos;
-}
-
-bool isRepoInitialized(const std::string &path)
-{
-    std::ifstream file(TACO_CONFIG_FILE);
-    std::string line;
-    while (getline(file, line))
-    {
-        int delimiter_index = line.find('#');
-        if (delimiter_index != -1)
-            line = line.substr(0, delimiter_index);
-
-        if (line == path)
-        {
-            file.close();
-            return true;
-        }
-    }
-    file.close();
-    return false;
-}
-
-void exitWithError(const std::string &message)
-{
-    std::cout << "Error: " + message << std::endl;
-    exit(EXIT_FAILURE);
-}
-
-void handleInit(const cxxopts::ParseResult &result)
-{
-    std::string pwd = std::getenv("PWD");
-    std::ofstream file(TACO_CONFIG_FILE, std::ios::app);
-
-    if (isRepoInitialized(pwd))
-        exitWithError("directory " + pwd + " is already initialized!");
-
-    // Add alias if alias option was set
-    if (result.contains("alias"))
-    {
-        file << pwd + "#" + result["alias"].as<std::string>() << std::endl;
-    }
-
-    else
-    {
-        file << pwd << std::endl;
-    }
-
-    file.close();
-}
 
 std::pair<std::string, std::string> chooseRepo()
 {
@@ -145,7 +49,7 @@ void handleArguments(int argc, char **argv)
 
     if (result["init"].as<bool>())
     {
-        handleInit(result);
+        initializeRepository(result);
     }
 }
 
@@ -155,32 +59,41 @@ int main(int argc, char *argv[])
 
     handleArguments(argc, argv);
 
-    Session* session;
-    bool is_session_created = false;
+    // Session* session;
+    // bool is_session_created = false;
 
-    std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
-    while (true)
-    {
-        try
-        {
-            std::pair<std::string, std::string> repo = chooseRepo();
+    // std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
+    // while (true)
+    // {
+    //     try
+    //     {
+    //         std::pair<std::string, std::string> repo = chooseRepo();
 
-            std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
+    //         std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
             
-            if (is_session_created) session->attach();
-            else {
-                session = new Session(session_name.c_str(), repo.first.c_str());
-                is_session_created = true;
-            } 
+    //         if (is_session_created) session->attach();
+    //         else {
+    //             session = new Session(session_name.c_str(), repo.first.c_str());
+    //             is_session_created = true;
+    //         } 
 
-            if (getchar() == 'q')
-                break;
-        }
-        catch(const std::exception& e)
-        {
-            delete session;
-        }
+    //         if (getchar() == 'q')
+    //             break;
+    //     }
+    //     catch(const std::exception& e)
+    //     {
+    //         delete session;
+    //     }
+    // }
+    // delete session;
+
+    // Menu* menu = new Menu();
+
+    Menu* menu = new Menu();
+    while (1)
+    {
+        menu->openMenu();
     }
-    delete session;
+
     return 0;
 }

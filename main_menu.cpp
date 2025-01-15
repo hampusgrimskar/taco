@@ -90,6 +90,10 @@ int main()
 			case 10:
 				choice = highlight;
 				break;
+			case 27:
+				nodelay(menu_win, true);
+				endwin();
+				return 0;
 			default:
 				mvprintw(24, 0, "Charcter pressed is = %3d Hopefully it can be printed as '%c'", c, c);
 				refresh();

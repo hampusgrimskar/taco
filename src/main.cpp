@@ -4,8 +4,12 @@
 #include <cstdlib>
 #include <string>
 #include <cstring>
+#include <csignal>
 #include "cxxopts.hpp"
 #include "Menu.h"
+
+// Global menu object
+Menu *MAIN_MENU = new Menu();
 
 /*
 Probably should move some stuff from
@@ -33,11 +37,8 @@ void handleArguments(int argc, char **argv)
 {
     cxxopts::Options options("taco", "Repository navigator");
 
-    options.add_options()
-    ("h,help", "Show help")
-    ("i,init", "Initialize a directory for taco use")
-    ("a,alias", "Alias to use instead of full path to repository. Can only be used together with init option",
-    cxxopts::value<std::string>());
+    options.add_options()("h,help", "Show help")("i,init", "Initialize a directory for taco use")("a,alias", "Alias to use instead of full path to repository. Can only be used together with init option",
+                                                                                                  cxxopts::value<std::string>());
 
     cxxopts::ParseResult result = options.parse(argc, argv);
 
@@ -53,47 +54,32 @@ void handleArguments(int argc, char **argv)
     }
 }
 
+void signalHandler(int signal)
+{
+    if (signal == SIGINT)
+    {
+        // Clean up sessions on SIGINT signal
+        MAIN_MENU->~Menu();
+        exit(0);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     initializeConfigurationFiles();
 
     handleArguments(argc, argv);
 
-    // Session* session;
-    // bool is_session_created = false;
+    // Cleanup Session instances when SIGINT
+    // signal is received
+    signal(SIGINT, signalHandler);
 
-    // std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
-    // while (true)
-    // {
-    //     try
-    //     {
-    //         std::pair<std::string, std::string> repo = chooseRepo();
-
-    //         std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
-            
-    //         if (is_session_created) session->attach();
-    //         else {
-    //             session = new Session(session_name.c_str(), repo.first.c_str());
-    //             is_session_created = true;
-    //         } 
-
-    //         if (getchar() == 'q')
-    //             break;
-    //     }
-    //     catch(const std::exception& e)
-    //     {
-    //         delete session;
-    //     }
-    // }
-    // delete session;
-
-    // Menu* menu = new Menu();
-
-    Menu* menu = new Menu();
     while (1)
     {
-        menu->openMenu();
+        MAIN_MENU->openMenu();
     }
+
+    MAIN_MENU->~Menu();
 
     return 0;
 }

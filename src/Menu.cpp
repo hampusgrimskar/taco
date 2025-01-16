@@ -2,12 +2,15 @@
 
 Menu::Menu()
 {
+	this->longest_title = 0;
 	for (std::pair<std::string, std::string> repo : getReposFromConfigFile())
 	{
 		std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
 
 		Menu::RepositorySession repository_session(session_name, repo.first);
 		this->repositorySessions.push_back(repository_session);
+
+		updateLongestTitle(session_name);
 	}
 }
 
@@ -53,11 +56,11 @@ void Menu::printMenu(WINDOW *menu_win, int highlight)
 		if (highlight == i) /* High light the present choice */
 		{
 			wattron(menu_win, A_REVERSE);
-			mvwprintw(menu_win, y, x, "%s", this->repositorySessions[i].getSessionNameWithStatus().c_str());
+			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(this->repositorySessions[i]).c_str());
 			wattroff(menu_win, A_REVERSE);
 		}
 		else
-			mvwprintw(menu_win, y, x, "%s", this->repositorySessions[i].getSessionNameWithStatus().c_str());
+			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(this->repositorySessions[i]).c_str());
 		++y;
 	}
 	wrefresh(menu_win);

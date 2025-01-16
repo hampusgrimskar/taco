@@ -11,6 +11,8 @@
 class Menu
 {
 private:
+    int longest_title;
+
     struct RepositorySession
     {
         std::string session_name;
@@ -25,13 +27,22 @@ private:
             this->session = nullptr;
             this->is_active = false;
         }
-
-        std::string getSessionNameWithStatus()
-        {
-            return (this->session_name + (is_active ? " (Active)" : ""));
-        }
     };
-    
+
+    void updateLongestTitle(const std::string& session_name)
+    {
+        if (session_name.length() > this->longest_title)
+        {
+            longest_title = session_name.length();
+        }
+    }
+
+    std::string getSessionNameWithStatus(Menu::RepositorySession& repositorySession)
+    {
+        int number_of_spaces = longest_title - repositorySession.session_name.length() + 1;
+        std::string spaces = std::string(number_of_spaces, ' ');
+        return (repositorySession.session_name + (repositorySession.is_active ? spaces + " (Active)" : ""));
+    }
 
     std::vector<Menu::RepositorySession> repositorySessions;
 

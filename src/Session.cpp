@@ -2,7 +2,7 @@
 
 Session::Session(const char *session_name, const char *repository_name) : mySessionName(session_name),
                                                                           myRepositoryName(repository_name),
-                                                                          mySessionId(generateId(repository_name))
+                                                                          mySessionId(generateId())
 {
     // Start new terminal session
     try

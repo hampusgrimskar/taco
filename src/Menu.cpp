@@ -6,18 +6,20 @@ Menu::Menu()
 	{
 		std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
 
-		this->repositorySessionMap.push_back(
-			std::make_tuple(session_name, repo.first, nullptr));
+		Menu::RepositorySession repository_session(session_name, repo.first);
+		this->repositorySessions.push_back(repository_session);
 	}
 }
 
 Menu::~Menu()
 {
 	// Delete Session objects
-	for (auto repository_session : this->repositorySessionMap)
+	for (auto repository_session : this->repositorySessions)
 	{
-		if (std::get<2>(repository_session) != nullptr)
-			delete std::get<2>(repository_session);
+		if (repository_session.session != nullptr)
+		{
+			delete repository_session.session;
+		}
 	}
 	// Stop Curses window
 	endwin();
@@ -35,16 +37,16 @@ void Menu::printMenu(WINDOW *menu_win, int highlight)
 	x = 2;
 	y = 2;
 	box(menu_win, 0, 0);
-	for (i = 0; i < this->repositorySessionMap.size(); ++i)
+	for (i = 0; i < this->repositorySessions.size(); ++i)
 	{
 		if (highlight == i) /* High light the present choice */
 		{
 			wattron(menu_win, A_REVERSE);
-			mvwprintw(menu_win, y, x, "%s", std::get<0>(this->repositorySessionMap[i]).c_str());
+			mvwprintw(menu_win, y, x, "%s", this->repositorySessions[i].getSessionNameWithStatus().c_str());
 			wattroff(menu_win, A_REVERSE);
 		}
 		else
-			mvwprintw(menu_win, y, x, "%s", std::get<0>(this->repositorySessionMap[i]).c_str());
+			mvwprintw(menu_win, y, x, "%s", this->repositorySessions[i].getSessionNameWithStatus().c_str());
 		++y;
 	}
 	wrefresh(menu_win);
@@ -52,19 +54,24 @@ void Menu::printMenu(WINDOW *menu_win, int highlight)
 
 void Menu::handleSelection(int selection)
 {
-	if (std::get<2>(this->repositorySessionMap[selection]) == nullptr)
+	Menu::RepositorySession& selected_repository = this->repositorySessions[selection];
+
+	if (this->repositorySessions[selection].session == nullptr)
 	{
 		// If the repository is not currently associated with a sesion,
-		// then create a new session
-		const char *path = std::get<0>(this->repositorySessionMap[selection]).c_str();
-		const char *alias = std::get<1>(this->repositorySessionMap[selection]).c_str();
-		Session *session = new Session(path, alias);
-		std::get<2>(this->repositorySessionMap[selection]) = session;
+		// then create a new session and mark it as active
+		const char *alias = selected_repository.session_name.c_str();
+		const char *path = selected_repository.path.c_str();
+
+		Session *session = new Session(alias, path);
+
+		selected_repository.session = session;
+		selected_repository.is_active = true;
 	}
 	else
 	{
 		// Otherwise attach to the already existing session
-		std::get<2>(this->repositorySessionMap[selection])->attach();
+		selected_repository.session->attach();
 	}
 }
 
@@ -100,13 +107,13 @@ void Menu::openMenu()
 		case 107:
 		case 259:
 			if (highlight == 0)
-				highlight = this->repositorySessionMap.size() - 1;
+				highlight = this->repositorySessions.size() - 1;
 			else
 				--highlight;
 			break;
 		case 106:
 		case 258:
-			if (highlight == this->repositorySessionMap.size() - 1)
+			if (highlight == this->repositorySessions.size() - 1)
 				highlight = 0;
 			else
 				++highlight;

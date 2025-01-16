@@ -1,7 +1,7 @@
 # Taco
+## Build project from source
 
-## Dependencies
-#### The following dependencies are required to run this application
+### The following dependencies are required to build this project
 
 ### CMake
 
@@ -19,8 +19,7 @@
 
     apt install screen
 
-## Build project from source
-
-#### To build project binary run the following command from the project root directory:
+---
+### To build project binary run the following command from the project root directory:
 
     cmake . && make

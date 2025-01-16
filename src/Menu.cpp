@@ -47,6 +47,7 @@ void Menu::printMenu(WINDOW *menu_win, int highlight)
 	x = 2;
 	y = 2;
 	box(menu_win, 0, 0);
+	mvwprintw(menu_win, 0, 2, "%s", "MY REPOSITORIES");
 	for (i = 0; i < this->repositorySessions.size(); ++i)
 	{
 		if (highlight == i) /* High light the present choice */
@@ -104,7 +105,7 @@ void Menu::openMenu()
 	int starty = (24 - 10) / 2;
 
 	curs_set(false);
-	menu_win = newwin(9, 50, 7, 2);
+	menu_win = newwin(this->repositorySessions.size() + 3, 50, 7, 2);
 	keypad(menu_win, TRUE);
 	printTitle();
 	refresh();

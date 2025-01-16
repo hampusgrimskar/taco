@@ -30,8 +30,18 @@ void Menu::printTitle()
 	printw("%s\n", TACO_TITLE.c_str());
 }
 
+void Menu::sortRepositorySessions()
+{
+	auto sortByStatus = [](const RepositorySession& rs1, const RepositorySession& rs2) {
+		return (rs1.is_active && !rs2.is_active);
+	};
+	std::sort(this->repositorySessions.begin(), this->repositorySessions.end(), sortByStatus);
+}
+
 void Menu::printMenu(WINDOW *menu_win, int highlight)
 {
+	sortRepositorySessions(); // Put active sessions on top
+
 	int x, y, i;
 
 	x = 2;
@@ -98,7 +108,9 @@ void Menu::openMenu()
 	keypad(menu_win, TRUE);
 	printTitle();
 	refresh();
+
 	printMenu(menu_win, highlight);
+
 	while (1)
 	{
 		c = wgetch(menu_win);

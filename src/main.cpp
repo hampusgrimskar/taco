@@ -16,23 +16,6 @@ Probably should move some stuff from
 this file into Utils.h
 */
 
-std::pair<std::string, std::string> chooseRepo()
-{
-    // TEMPORARY CODE FOR TESTING
-    std::cout << "\nTaco main session running...\ntype q to quit." << std::endl;
-    int menu_counter = 0;
-    std::vector<std::pair<std::string, std::string>> options;
-
-    for (auto repo : getReposFromConfigFile())
-    {
-        std::string name = repo.second != NO_ALIAS ? repo.second : repo.first;
-        std::cout << menu_counter++ << ": " + name << std::endl;
-        options.push_back(std::pair(repo.first, repo.second));
-    }
-    int choice = std::stoi(std::string(1, getchar()));
-    return options[choice];
-}
-
 void handleArguments(int argc, char **argv)
 {
     cxxopts::Options options("taco", "Repository navigator");

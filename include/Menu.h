@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "Session.h"
 
 class Menu
@@ -32,10 +33,11 @@ private:
     };
     
 
-    // std::vector<std::tuple<std::string, std::string, Session *>> repositorySessions;
     std::vector<Menu::RepositorySession> repositorySessions;
 
     void printTitle();
+
+    void sortRepositorySessions();
 
     void printMenu(WINDOW *menu_win, int highlight);
 

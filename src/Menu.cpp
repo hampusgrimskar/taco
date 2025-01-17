@@ -135,6 +135,7 @@ void Menu::openMenu()
 				++highlight;
 			break;
 		case 10:
+		case 115:
 			choice = highlight;
 			break;
 		case 27:

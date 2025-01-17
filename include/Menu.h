@@ -41,7 +41,7 @@ private:
     {
         int number_of_spaces = longest_title - repositorySession.session_name.length() + 1;
         std::string spaces = std::string(number_of_spaces, ' ');
-        return (repositorySession.session_name + (repositorySession.is_active ? spaces + " (Active)" : ""));
+        return (repositorySession.session_name + (repositorySession.is_active ? spaces + " (Active)" : spaces + "         "));
     }
 
     std::vector<Menu::RepositorySession> repositorySessions;

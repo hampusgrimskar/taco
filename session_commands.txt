@@ -60,3 +60,6 @@ REMOVE ESCAPE TIME DELAY
 
 ENABLE SCROLLING
 	set -g mouse on
+
+DISABLE SESSION DETACH WITH ESCAPE WHILE IN VI EDITOR
+	tmux bind-key -n Escape run "if [ #{pane_current_command} != vi ]; then tmux detach; else tmux send-keys Escape; fi"

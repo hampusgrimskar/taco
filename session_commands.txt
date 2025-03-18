@@ -4,7 +4,7 @@ CREATE NEW SESSION:
 
 DETACH FROM A SESSION:
 	screen -d <session_name>
-	
+
 ATTACH TO A SESSION:
 	screen -r <session_name>
 
@@ -38,7 +38,18 @@ screen -S test bash -c "screen -S test -X bindkey ^d detach && cd /home/egriham 
 ########### TMUX ############
 
 CREATE SESSION:
-	tmux new-session -s <session_name>
+	tmux new-session -s <session_name> \
+	-c <start_directory> \
+	"tmux bind-key -n Escape run 'if \
+	[ #{pane_current_command} != vi ] && \
+	[ #{pane_current_command} != vim ] && \
+	[ #{pane_current_command} != nvim ] && \
+	[ #{pane_current_command} != git ]; \
+ 	then tmux detach; \
+	else tmux send-keys Escape; fi'; \
+	tmux set-option -g escape-time 0; \
+	tmux set -g mouse on; \
+	bash"
 
 ATTACH TO SESSION
 	tmux attach -t <session_name>

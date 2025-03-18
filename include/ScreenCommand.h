@@ -3,10 +3,24 @@
 
 namespace ScreenConstants
 {
-    inline const char *CREATE_SESSION_COMMAND = "screen -S %s bash -c \"screen -S %s -X bindkey ^d detach && screen -S %s -X bindkey ^[ detach && cd %s && exec bash\"";
-    inline const char *ATTACH_TO_SESSION_COMMAND = "screen -r %s";
-    inline const char *DETACH_SESSION_COMMAND = "screen -d %s";
-    inline const char *TERMINATE_SESSION_COMMAND = "screen -X -S %s quit";
+    inline const char *CREATE_SESSION_COMMAND =
+        "tmux new-session -s %s \\\n"
+        " -c %s \\\n"
+        "\"tmux bind-key -n Escape run 'if \\\n"
+        " [ #{pane_current_command} != vi ] && \\\n"
+        " [ #{pane_current_command} != vim ] && \\\n"
+        " [ #{pane_current_command} != nvim ] && \\\n"
+        " [ #{pane_current_command} != k9s ] && \\\n"
+        " [ #{pane_current_command} != git ]; \\\n"
+        " then tmux detach; \\\n"
+        " else tmux send-keys Escape; fi'; \\\n"
+        " tmux set-option -g escape-time 0; \\\n"
+        " tmux set -g mouse on; \\\n"
+        " bash\"\n";
+
+    inline const char *ATTACH_TO_SESSION_COMMAND = "tmux attach -t %s";
+    inline const char *DETACH_SESSION_COMMAND = "tmux detach -s %s";
+    inline const char *TERMINATE_SESSION_COMMAND = "tmux kill-session -t %s";
 }
 
 enum ScreenCommand

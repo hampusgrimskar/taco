@@ -6,21 +6,21 @@
 #include "ScreenCommand.h"
 #include "Utils.h"
 
-class Session 
+class Session
 {
 private:
-    const char* mySessionName;
-    const char* myRepositoryName;
+    const char *mySessionName;
+    const char *myRepositoryName;
     std::string mySessionId;
 
     bool myIsRunning;
 
     void executeCommand(ScreenCommand commandType);
 
-    void handleError(const std::exception& e);
+    void handleError(const std::exception &e);
 
 public:
-    Session(const char* session_name, const char* repository_name);
+    Session(const char *session_name, const char *repository_name);
 
     ~Session();
 

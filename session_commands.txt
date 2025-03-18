@@ -46,6 +46,9 @@ ATTACH TO SESSION
 DETACH FROM SESSION
 	tmux detach
 
+NEW WINDOW WITH START directory
+	tmux new-window -n <window_name> -c <directory>
+
 BIND KEY WITHOUT PREFIX
 	bind-key -n Escape detach
 

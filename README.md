@@ -15,9 +15,9 @@
 
     apt install libncurses5-dev libncursesw5-dev
 
-### Screen
+### Tmux
 
-    apt install screen
+    apt install tmux
 
 ---
 ### To build project binary run the following command from the project root directory:

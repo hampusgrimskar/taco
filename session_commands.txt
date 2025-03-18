@@ -49,6 +49,9 @@ DETACH FROM SESSION
 NEW WINDOW WITH START directory
 	tmux new-window -n <window_name> -c <directory>
 
+LIST ALL SESSION NAMES:
+	tmux ls | awk -F: '{print $1}'
+
 BIND KEY WITHOUT PREFIX
 	bind-key -n Escape detach
 

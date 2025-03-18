@@ -51,3 +51,6 @@ BIND KEY WITHOUT PREFIX
 
 REMOVE ESCAPE TIME DELAY
 	set-option -g escape-time 0
+
+ENABLE SCROLLING
+	set -g mouse on

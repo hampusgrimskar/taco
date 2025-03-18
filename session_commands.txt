@@ -62,4 +62,9 @@ ENABLE SCROLLING
 	set -g mouse on
 
 DISABLE SESSION DETACH WITH ESCAPE WHILE IN VI EDITOR
-	tmux bind-key -n Escape run "if [ #{pane_current_command} != vi ]; then tmux detach; else tmux send-keys Escape; fi"
+	tmux bind-key -n Escape run "if [ #{pane_current_command} != vi ] && \
+	[ #{pane_current_command} != vim ] && \
+	[ #{pane_current_command} != nvim ] && \
+	[ #{pane_current_command} != git ]; \
+	then tmux detach; \
+	else tmux send-keys Escape; fi"

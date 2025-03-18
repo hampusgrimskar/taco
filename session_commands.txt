@@ -32,3 +32,22 @@ The command performs the following:
 - launch interactive bash
 
 screen -S test bash -c "screen -S test -X bindkey ^d detach && cd /home/egriham && exec bash"
+
+
+
+########### TMUX ############
+
+CREATE SESSION:
+	tmux new-session -s <session_name>
+
+ATTACH TO SESSION
+	tmux attach -t <session_name>
+
+DETACH FROM SESSION
+	tmux detach
+
+BIND KEY WITHOUT PREFIX
+	bind-key -n Escape detach
+
+REMOVE ESCAPE TIME DELAY
+	set-option -g escape-time 0

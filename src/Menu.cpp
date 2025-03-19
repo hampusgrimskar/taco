@@ -53,7 +53,7 @@ void Menu::printMenu(WINDOW *menu_win, int highlight)
 	mvwprintw(menu_win, 0, 2, "%s", "MY REPOSITORIES");
 	for (i = 0; i < this->repositorySessions.size(); ++i)
 	{
-		if (highlight == i) /* High light the present choice */
+		if (highlight == i) // Highlight the present choice
 		{
 			wattron(menu_win, A_REVERSE);
 			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(this->repositorySessions[i]).c_str());
@@ -100,17 +100,25 @@ void Menu::openMenu()
 	int c;
 
 	initscr();
-	start_color();
+	int terminal_width, terminal_height;
+	getmaxyx(stdscr, terminal_height, terminal_width);
 	clear();
 	noecho();
 	cbreak(); // Line buffering disabled. pass on everything
-	int startx = (80 - 30) / 2;
-	int starty = (24 - 10) / 2;
+	// int startx = (80 - 30) / 2;
+	// int starty = (24 - 10) / 2;
+	int menu_hight = this->repositorySessions.size() + 3;
+	int menu_width = 50;
 
 	curs_set(false);
-	menu_win = newwin(this->repositorySessions.size() + 3, 50, 7, 2);
+	menu_win = newwin(
+		menu_hight,
+		menu_width,
+		(terminal_height / 2) - (menu_hight / 2),
+		(terminal_width / 2) - (menu_width / 2)
+	);
+
 	keypad(menu_win, TRUE);
-	printTitle();
 	refresh();
 
 	printMenu(menu_win, highlight);

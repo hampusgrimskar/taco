@@ -20,8 +20,11 @@ void handleArguments(int argc, char **argv)
 {
     cxxopts::Options options("taco", "Repository navigator");
 
-    options.add_options()("h,help", "Show help")("i,init", "Initialize a directory for taco use")("a,alias", "Alias to use instead of full path to repository. Can only be used together with init option",
-                                                                                                  cxxopts::value<std::string>());
+    options.add_options()
+    ("h,help", "Show help")
+    ("i,init", "Initialize a directory for taco use")
+    ("a,alias", "Alias to use instead of full path to repository. Can only be used together with init option",cxxopts::value<std::string>())
+    ("rm,remove", "Remove this repository from taco (Note: This will NOT change or remove any files in the repo)");
 
     cxxopts::ParseResult result = options.parse(argc, argv);
 
@@ -34,6 +37,11 @@ void handleArguments(int argc, char **argv)
     if (result["init"].as<bool>())
     {
         initializeRepository(result);
+    }
+
+    if (result["remove"].as<bool>())
+    {
+        MAIN_MENU->removeRepository(result);
     }
 }
 

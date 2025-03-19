@@ -11,23 +11,29 @@
 class Menu
 {
 private:
-    int longest_title;
-
     struct RepositorySession
-    {
-        std::string session_name;
-        std::string path;
-        Session* session;
-        bool is_active;
-
-        RepositorySession(std::string session_name, std::string path)
         {
-            this->session_name = session_name;
-            this->path = path;
-            this->session = nullptr;
-            this->is_active = false;
-        }
-    };
+            std::string session_name;
+            std::string path;
+            Session* session;
+            bool is_active;
+
+            RepositorySession(std::string session_name, std::string path)
+            {
+                this->session_name = session_name;
+                this->path = path;
+                this->session = nullptr;
+                this->is_active = false;
+            }
+
+            bool operator==(const RepositorySession& other)
+            {
+                return (this->session_name == other.session_name)
+                    && (this->path == other.path);
+            }
+        };
+
+    int longest_title;
 
     void updateLongestTitle(const std::string& session_name)
     {
@@ -54,12 +60,18 @@ private:
 
     void handleSelection(int selection);
 
+    void updateRepositorySessions();
+    
 public:
     Menu();
-
+    
     ~Menu();
-
+    
     void openMenu();
+
+    void removeRepositorySession(std::string session_name);
+
+    void removeRepository(const cxxopts::ParseResult &result);
 };
 
 #endif

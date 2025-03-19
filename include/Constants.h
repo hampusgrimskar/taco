@@ -8,6 +8,7 @@
 inline const std::string FORWARD_SLASH = "/";
 inline const std::string DOT = ".";
 inline const std::string NO_ALIAS = "";
+inline const std::string EMPTY_LINE = "";
 
 inline std::string HOME_DIR = std::getenv("HOME");
 inline std::string TACO_CONFIG_DIR = HOME_DIR + FORWARD_SLASH + DOT + "taco/";

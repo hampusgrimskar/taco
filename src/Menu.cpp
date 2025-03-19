@@ -1,17 +1,10 @@
 #include "Menu.h"
+#include <algorithm>
 
 Menu::Menu()
 {
 	this->longest_title = 0;
-	for (std::pair<std::string, std::string> repo : getReposFromConfigFile())
-	{
-		std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
-
-		Menu::RepositorySession repository_session(session_name, repo.first);
-		this->repositorySessions.push_back(repository_session);
-
-		updateLongestTitle(session_name);
-	}
+	updateRepositorySessions();
 }
 
 Menu::~Menu()
@@ -31,6 +24,28 @@ Menu::~Menu()
 void Menu::printTitle()
 {
 	printw("%s\n", TACO_TITLE.c_str());
+}
+
+void Menu::updateRepositorySessions()
+{
+	for (std::pair<std::string, std::string> repo : getReposFromConfigFile())
+	{
+		std::string session_name = repo.second != NO_ALIAS ? repo.second : repo.first;
+
+		// Skip empty lines in config file
+		if (session_name == EMPTY_LINE) continue;
+
+		Menu::RepositorySession repository_session(session_name, repo.first);
+
+		if (std::find(this->repositorySessions.begin(),
+			this->repositorySessions.end(),
+			repository_session) == this->repositorySessions.end())
+			{
+				this->repositorySessions.push_back(repository_session);
+			}
+
+		updateLongestTitle(session_name);
+	}
 }
 
 void Menu::sortRepositorySessions()
@@ -68,25 +83,96 @@ void Menu::printMenu(WINDOW *menu_win, int highlight)
 
 void Menu::handleSelection(int selection)
 {
-	Menu::RepositorySession& selected_repository = this->repositorySessions[selection];
+	Menu::RepositorySession* selected_repository = &this->repositorySessions[selection];
 
 	if (this->repositorySessions[selection].session == nullptr)
 	{
 		// If the repository is not currently associated with a sesion,
 		// then create a new session and mark it as active
-		const char *alias = selected_repository.session_name.c_str();
-		const char *path = selected_repository.path.c_str();
+		const char *alias = selected_repository->session_name.c_str();
+		const char *path = selected_repository->path.c_str();
 
 		Session *session = new Session(alias, path);
 
-		selected_repository.session = session;
-		selected_repository.is_active = true;
+		selected_repository->session = session;
+		selected_repository->is_active = true;
 	}
 	else
 	{
 		// Otherwise attach to the already existing session
-		selected_repository.session->attach();
+		selected_repository->session->attach();
 	}
+	std::cout << this->repositorySessions[selection].session << std::endl;
+}
+
+void Menu::removeRepositorySession(const std::string session_name)
+{
+	for (RepositorySession ses : this->repositorySessions)
+	{
+		std::cout << ses.session << std::endl;
+	}
+	auto it = std::find_if(this->repositorySessions.begin(), this->repositorySessions.end(),
+	[session_name](const RepositorySession& rs) {
+		return rs.session_name == session_name;
+	});
+
+	if (it != this->repositorySessions.end())
+	{
+		std::cout << it->session << std::endl;
+		it->session->detach();
+		it->session->~Session();
+	}
+}
+
+void Menu::removeRepository(const cxxopts::ParseResult &result)
+{
+    std::string pwd = std::getenv("PWD");
+
+    if (!isRepoInitialized(pwd)) return;
+
+    std::ifstream file_in(TACO_CONFIG_FILE);
+    std::ofstream temp(TACO_CONFIG_FILE + "-temp", std::ios::app);
+    std::string line;
+    std::unordered_map<std::string, std::string> repos;
+    while (getline(file_in, line))
+    {
+        std::string path;
+        std::string alias;
+
+        int delimiter_index = line.find('#');
+        if (delimiter_index != -1)
+        {
+            path = line.substr(0, delimiter_index);
+            alias = line.substr(delimiter_index + 1, line.length());
+        }
+        else
+        {
+            path = line;
+            alias = NO_ALIAS;
+        }
+
+        if (path == pwd)
+        {
+            try
+            {
+                this->removeRepositorySession(alias != NO_ALIAS ? alias : path);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+                file_in.close();
+                temp.close();
+                return;
+            }
+            
+            line.replace(0, line.length(), EMPTY_LINE);
+        }
+        temp << line << std::endl;
+    }
+    file_in.close();
+    temp.close();
+    remove(TACO_CONFIG_FILE.c_str());
+    rename((TACO_CONFIG_FILE + "-temp").c_str(), TACO_CONFIG_FILE.c_str());
 }
 
 /*
@@ -94,6 +180,8 @@ This method is ugly, needs cleanup in the future
 */
 void Menu::openMenu()
 {
+	updateRepositorySessions();
+
 	WINDOW *menu_win;
 	int highlight = 0;
 	int choice = -1;

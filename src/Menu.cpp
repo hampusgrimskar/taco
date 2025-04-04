@@ -50,13 +50,18 @@ void Menu::updateRepositorySessions()
 
 void Menu::sortRepositorySessions()
 {
+	RepositorySession highlighted_repo = repositorySessions[highlight];
+
 	auto sortByStatus = [](const RepositorySession& rs1, const RepositorySession& rs2) {
 		return (rs1.is_active && !rs2.is_active);
 	};
 	std::sort(this->repositorySessions.begin(), this->repositorySessions.end(), sortByStatus);
+
+	auto it = std::find(repositorySessions.begin(), repositorySessions.end(), highlighted_repo);
+	highlight = std::distance(repositorySessions.begin(), it);
 }
 
-void Menu::printMenu(WINDOW *menu_win, int highlight)
+void Menu::printMenu(WINDOW *menu_win)
 {
 	sortRepositorySessions(); // Put active sessions on top
 
@@ -102,15 +107,10 @@ void Menu::handleSelection(int selection)
 		// Otherwise attach to the already existing session
 		selected_repository->session->attach();
 	}
-	std::cout << this->repositorySessions[selection].session << std::endl;
 }
 
 void Menu::removeRepositorySession(const std::string session_name)
 {
-	for (RepositorySession ses : this->repositorySessions)
-	{
-		std::cout << ses.session << std::endl;
-	}
 	auto it = std::find_if(this->repositorySessions.begin(), this->repositorySessions.end(),
 	[session_name](const RepositorySession& rs) {
 		return rs.session_name == session_name;
@@ -118,7 +118,6 @@ void Menu::removeRepositorySession(const std::string session_name)
 
 	if (it != this->repositorySessions.end())
 	{
-		std::cout << it->session << std::endl;
 		it->session->detach();
 		it->session->~Session();
 	}
@@ -183,7 +182,6 @@ void Menu::openMenu()
 	updateRepositorySessions();
 
 	WINDOW *menu_win;
-	int highlight = 0;
 	int choice = -1;
 	int c;
 
@@ -209,7 +207,7 @@ void Menu::openMenu()
 	keypad(menu_win, TRUE);
 	refresh();
 
-	printMenu(menu_win, highlight);
+	printMenu(menu_win);
 
 	while (1)
 	{
@@ -241,7 +239,7 @@ void Menu::openMenu()
 			refresh();
 			break;
 		}
-		printMenu(menu_win, highlight);
+		printMenu(menu_win);
 		if (choice != -1) // User did a choice come out of the infinite loop
 			break;
 	}

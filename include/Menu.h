@@ -11,6 +11,8 @@
 class Menu
 {
 private:
+    int highlight = 0;
+
     struct RepositorySession
         {
             std::string session_name;
@@ -56,7 +58,7 @@ private:
 
     void sortRepositorySessions();
 
-    void printMenu(WINDOW *menu_win, int highlight);
+    void printMenu(WINDOW *menu_win);
 
     void handleSelection(int selection);
 

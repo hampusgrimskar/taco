@@ -72,7 +72,6 @@ void Session::executeCommand(ScreenCommand command_type)
         sprintf(f_command, getCommand(command_type), mySessionId.c_str());
     }
 
-    std::cout << f_command << std::endl;
     system(f_command);
 }
 

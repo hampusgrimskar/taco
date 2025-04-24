@@ -4,21 +4,23 @@
 
 ### Before installing, make sure you have the following dependencies installed on your system
 
+    apt update
+
 ### CMake
 
-    apt install cmake
+    apt install cmake -y
 
 ### G++ Compiler
 
-    apt install g++
+    apt install g++ -y
 
 ### ncurses header files
 
-    apt install libncurses5-dev libncursesw5-dev
+    apt install libncurses5-dev libncursesw5-dev -y
 
 ### Tmux
 
-    apt install tmux
+    apt install tmux -y
 
 ## Install
 Run this command in the localtion where you want to install taco. The script will:

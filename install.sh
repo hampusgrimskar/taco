@@ -14,3 +14,5 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "export PATH=\"\$PATH:$PWD/taco/bin\"" >> ~/.bashrc
+
+source ~/.bashrc

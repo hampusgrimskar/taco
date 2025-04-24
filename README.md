@@ -28,7 +28,7 @@ Run this command in the localtion where you want to install taco. The script wil
 * build the project
 * then add taco to the path in your bashrc (if you use a different shell you will need to do this manually).
 ---
-    curl -o- https://raw.githubusercontent.com/hampusgrimskar/taco/refs/heads/master/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/hampusgrimskar/taco/refs/heads/master/install.sh | bash && source ~/.bashrc
 
 ### If you make changes to the code and wish to manually build the project you can run:
 

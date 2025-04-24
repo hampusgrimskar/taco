@@ -9,10 +9,8 @@ cd taco
 cmake . && make
 
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to build taco, make sure you have installed the required dependencies\n Please refer to https://github.com/hampusgrimskar/taco/blob/master/README.md if you are unsure."
+    echo "Error: Failed to build taco, make sure you have installed the required dependencies Please refer to https://github.com/hampusgrimskar/taco/blob/master/README.md if you are unsure."
     exit 1
 fi
 
-echo "export PATH=\"\$PATH:$PWD/taco/bin\"" >> ~/.bashrc
-
-source ~/.bashrc
+echo "export PATH=\"\$PATH:$PWD/bin\"" >> ~/.bashrc

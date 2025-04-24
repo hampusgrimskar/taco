@@ -5,6 +5,8 @@
 
 #define NULL_CHARACTER '\0'
 
+inline const int MENU_SIZE = 17;
+
 inline const std::string FORWARD_SLASH = "/";
 inline const std::string DOT = ".";
 inline const std::string NO_ALIAS = "";

@@ -63,6 +63,8 @@ private:
     void handleSelection(int selection);
 
     void updateRepositorySessions();
+
+    std::vector<Menu::RepositorySession> slideMenu();
     
 public:
     Menu();

@@ -55,34 +55,59 @@ void Menu::sortRepositorySessions()
 	auto sortByStatus = [](const RepositorySession& rs1, const RepositorySession& rs2) {
 		return (rs1.is_active && !rs2.is_active);
 	};
-	std::sort(this->repositorySessions.begin(), this->repositorySessions.end(), sortByStatus);
+	std::stable_sort(this->repositorySessions.begin(), this->repositorySessions.end(), sortByStatus);
 
 	auto it = std::find(repositorySessions.begin(), repositorySessions.end(), highlighted_repo);
 	highlight = std::distance(repositorySessions.begin(), it);
+}
+
+std::vector<Menu::RepositorySession> Menu::slideMenu()
+{
+	int totalItems = (int)repositorySessions.size();
+    int slideStart = 0;
+
+    if (highlight >= MENU_SIZE)
+	{
+        slideStart = std::min(highlight - MENU_SIZE + 1, totalItems - MENU_SIZE);
+    }
+
+    int slideEnd = std::min(slideStart + MENU_SIZE, totalItems);
+
+	std::vector<RepositorySession> subvec = {
+		repositorySessions.begin() + slideStart,
+		repositorySessions.begin() + slideEnd};
+
+	return subvec;
 }
 
 void Menu::printMenu(WINDOW *menu_win)
 {
 	sortRepositorySessions(); // Put active sessions on top
 
-	int x, y, i;
+	std::vector<RepositorySession> slidedMenu = slideMenu();
+	int slideStart = std::max(0, highlight - MENU_SIZE + 1);
+
+	int x, y;
 
 	x = 2;
 	y = 2;
 	box(menu_win, 0, 0);
 	mvwprintw(menu_win, 0, 2, "%s", "MY REPOSITORIES");
-	for (i = 0; i < this->repositorySessions.size(); ++i)
+	for (int i = 0; i < slidedMenu.size(); ++i)
 	{
-		if (highlight == i) // Highlight the present choice
+		if (highlight == slideStart + i) // Highlight the present choice
 		{
 			wattron(menu_win, A_REVERSE);
-			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(this->repositorySessions[i]).c_str());
+			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(slidedMenu[i]).c_str());
 			wattroff(menu_win, A_REVERSE);
 		}
 		else
-			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(this->repositorySessions[i]).c_str());
+		{
+			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(slidedMenu[i]).c_str());
+		}
 		++y;
 	}
+
 	wrefresh(menu_win);
 }
 
@@ -191,8 +216,7 @@ void Menu::openMenu()
 	clear();
 	noecho();
 	cbreak(); // Line buffering disabled. pass on everything
-	// int startx = (80 - 30) / 2;
-	// int starty = (24 - 10) / 2;
+
 	int menu_hight = this->repositorySessions.size() + 3;
 	int menu_width = 50;
 

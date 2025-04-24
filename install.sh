@@ -2,18 +2,15 @@
 
 set -e
 
-sudo apt update
-
-sudo apt install git -y
-sudo apt install g++ -y
-sudo apt install cmake -y
-sudo apt install tmux -y
-sudo apt install libncurses5-dev libncursesw5-dev -y
-
 git clone https://github.com/hampusgrimskar/taco.git
 
 cd taco
 
 cmake . && make
 
-# curl -o- https://raw.githubusercontent.com/hampusgrimskar/taco/refs/heads/master/install.sh | bash
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to build taco, make sure you have installed the required dependencies\n Please refer to https://github.com/hampusgrimskar/taco/blob/master/README.md if you are unsure."
+    exit 1
+fi
+
+echo "export PATH=\"\$PATH:$pwd/taco/bin\"" >> ~/.bashrc

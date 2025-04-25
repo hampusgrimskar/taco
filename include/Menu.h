@@ -54,6 +54,10 @@ private:
 
     std::vector<Menu::RepositorySession> repositorySessions;
 
+    std::vector<Menu::RepositorySession> slidingWindow;
+
+    int slidingOffset = 0;
+
     void printTitle();
 
     void sortRepositorySessions();
@@ -64,7 +68,9 @@ private:
 
     void updateRepositorySessions();
 
-    std::vector<Menu::RepositorySession> slideMenu();
+    void slideMenuDown();
+
+    void slideMenuUp();
     
 public:
     Menu();

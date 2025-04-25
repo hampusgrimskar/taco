@@ -5,6 +5,7 @@ Menu::Menu()
 {
 	this->longest_title = 0;
 	updateRepositorySessions();
+	slidingWindow = { repositorySessions.begin(), repositorySessions.begin() + MENU_SIZE };
 }
 
 Menu::~Menu()
@@ -61,31 +62,47 @@ void Menu::sortRepositorySessions()
 	highlight = std::distance(repositorySessions.begin(), it);
 }
 
-std::vector<Menu::RepositorySession> Menu::slideMenu()
+void Menu::slideMenuDown()
 {
-	int totalItems = (int)repositorySessions.size();
-    int slideStart = 0;
-
-    if (highlight >= MENU_SIZE)
+	
+	if (highlight > MENU_SIZE - 1 + slidingOffset)
 	{
-        slideStart = std::min(highlight - MENU_SIZE + 1, totalItems - MENU_SIZE);
-    }
+		slidingOffset++;
+	}
 
-    int slideEnd = std::min(slideStart + MENU_SIZE, totalItems);
+	// Handle wrap around from bottom to top
+	if (highlight == 0)
+	{
+		slidingOffset = 0;
+	}
 
-	std::vector<RepositorySession> subvec = {
-		repositorySessions.begin() + slideStart,
-		repositorySessions.begin() + slideEnd};
+	slidingWindow = {
+		repositorySessions.begin() + slidingOffset,
+		repositorySessions.begin() + MENU_SIZE + slidingOffset };
+}
 
-	return subvec;
+void Menu::slideMenuUp()
+{
+	
+	if (highlight < slidingOffset)
+	{
+		slidingOffset--;
+	}
+
+	// Handle wrap around from top to bottom
+	if (highlight == repositorySessions.size() - 1)
+	{
+		slidingOffset = repositorySessions.size() - MENU_SIZE;
+	}
+
+	slidingWindow = {
+		repositorySessions.begin() + slidingOffset,
+		repositorySessions.begin() + MENU_SIZE + slidingOffset };
 }
 
 void Menu::printMenu(WINDOW *menu_win)
 {
 	sortRepositorySessions(); // Put active sessions on top
-
-	std::vector<RepositorySession> slidedMenu = slideMenu();
-	int slideStart = std::max(0, highlight - MENU_SIZE + 1);
 
 	int x, y;
 
@@ -93,17 +110,17 @@ void Menu::printMenu(WINDOW *menu_win)
 	y = 2;
 	box(menu_win, 0, 0);
 	mvwprintw(menu_win, 0, 2, "%s", "MY REPOSITORIES");
-	for (int i = 0; i < slidedMenu.size(); ++i)
+	for (int i = 0; i < slidingWindow.size(); ++i)
 	{
-		if (highlight == slideStart + i) // Highlight the present choice
+		if (highlight == slidingOffset + i) // Highlight the present choice
 		{
 			wattron(menu_win, A_REVERSE);
-			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(slidedMenu[i]).c_str());
+			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(slidingWindow[i]).c_str());
 			wattroff(menu_win, A_REVERSE);
 		}
 		else
 		{
-			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(slidedMenu[i]).c_str());
+			mvwprintw(menu_win, y, x, "%s", getSessionNameWithStatus(slidingWindow[i]).c_str());
 		}
 		++y;
 	}
@@ -244,6 +261,7 @@ void Menu::openMenu()
 				highlight = this->repositorySessions.size() - 1;
 			else
 				--highlight;
+				slideMenuUp();
 			break;
 		case 106:
 		case 258:
@@ -251,6 +269,7 @@ void Menu::openMenu()
 				highlight = 0;
 			else
 				++highlight;
+				slideMenuDown();
 			break;
 		case 10:
 		case 115:

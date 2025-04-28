@@ -71,6 +71,8 @@ private:
     void slideMenuDown();
 
     void slideMenuUp();
+
+    void refreshSlidingWindow();
     
 public:
     Menu();

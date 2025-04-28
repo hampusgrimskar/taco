@@ -75,10 +75,6 @@ void Menu::slideMenuDown()
 	{
 		slidingOffset = 0;
 	}
-
-	slidingWindow = {
-		repositorySessions.begin() + slidingOffset,
-		repositorySessions.begin() + MENU_SIZE + slidingOffset };
 }
 
 void Menu::slideMenuUp()
@@ -94,7 +90,10 @@ void Menu::slideMenuUp()
 	{
 		slidingOffset = repositorySessions.size() - MENU_SIZE;
 	}
+}
 
+void Menu::refreshSlidingWindow()
+{
 	slidingWindow = {
 		repositorySessions.begin() + slidingOffset,
 		repositorySessions.begin() + MENU_SIZE + slidingOffset };
@@ -103,6 +102,7 @@ void Menu::slideMenuUp()
 void Menu::printMenu(WINDOW *menu_win)
 {
 	sortRepositorySessions(); // Put active sessions on top
+	refreshSlidingWindow();
 
 	int x, y;
 

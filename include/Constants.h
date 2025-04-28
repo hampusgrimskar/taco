@@ -7,6 +7,7 @@
 
 inline const int MENU_SIZE = 17;
 inline const int MENU_MARGIN = 5;
+inline const int SESSION_NAME_AND_STATUS_GAP = 10;
 inline const int SESSION_ACTIVE_PLACEHOLDER_LENGTH = 9;
 
 inline const std::string FORWARD_SLASH = "/";

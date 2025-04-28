@@ -47,7 +47,7 @@ private:
 
     std::string getSessionNameWithStatus(Menu::RepositorySession& repositorySession)
     {
-        int number_of_spaces = longest_title - repositorySession.session_name.length() + 1;
+        int number_of_spaces = longest_title - repositorySession.session_name.length() + SESSION_NAME_AND_STATUS_GAP;
         std::string spaces = std::string(number_of_spaces, ' ');
         return (repositorySession.session_name + (repositorySession.is_active ? spaces + " (Active)" : spaces + "         "));
     }

@@ -235,7 +235,7 @@ void Menu::openMenu()
 	cbreak(); // Line buffering disabled. pass on everything
 
 	int menu_hight = this->repositorySessions.size() + 3;
-	int menu_width = 50;
+	int menu_width = longest_title + SESSION_ACTIVE_PLACEHOLDER_LENGTH + MENU_MARGIN;
 
 	curs_set(false);
 	menu_win = newwin(

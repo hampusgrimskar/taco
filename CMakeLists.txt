@@ -14,6 +14,13 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 
+include(FetchContent)
+FetchContent_Declare(ftxui
+    GIT_REPOSITORY https://github.com/ArthurSonzogni/ftxui
+    GIT_TAG v6.1.9
+)
+FetchContent_MakeAvailable(ftxui)
+
 include_directories(include)
 
 set(SOURCE_FILES
@@ -24,4 +31,8 @@ set(SOURCE_FILES
 
 add_executable(taco ${SOURCE_FILES})
 
-target_link_libraries(taco ${CURSES_LIBRARIES})
+target_link_libraries(taco ${CURSES_LIBRARIES}
+    ftxui::component
+    ftxui::dom
+    ftxui::screen
+)

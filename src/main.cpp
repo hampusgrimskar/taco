@@ -6,10 +6,12 @@
 #include <cstring>
 #include <csignal>
 #include "cxxopts.hpp"
-#include "Menu.h"
+// #include "Menu.h"
+#include "FtxMenu.h"
 
 // Global menu object
-Menu *MAIN_MENU = new Menu();
+// Menu *MAIN_MENU = new Menu();
+FtxMenu *MAIN_MENU = new FtxMenu();
 
 /*
 Probably should move some stuff from
@@ -41,7 +43,7 @@ void handleArguments(int argc, char **argv)
 
     if (result["remove"].as<bool>())
     {
-        MAIN_MENU->removeRepository(result);
+        // MAIN_MENU->removeRepository(result);
     }
 }
 
@@ -50,7 +52,7 @@ void signalHandler(int signal)
     if (signal == SIGINT)
     {
         // Clean up sessions on SIGINT signal
-        MAIN_MENU->~Menu();
+        MAIN_MENU->~FtxMenu();
         exit(0);
     }
 }
@@ -67,10 +69,10 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        MAIN_MENU->openMenu();
+        MAIN_MENU->show();
     }
 
-    MAIN_MENU->~Menu();
+    MAIN_MENU->~FtxMenu();
 
     return 0;
 }

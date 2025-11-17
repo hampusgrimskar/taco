@@ -27,6 +27,7 @@ set(SOURCE_FILES
     src/main.cpp
     src/Session.cpp
     src/Menu.cpp
+    src/FtxMenu.cpp
 )
 
 add_executable(taco ${SOURCE_FILES})

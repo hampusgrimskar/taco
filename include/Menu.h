@@ -12,6 +12,7 @@ class Menu
 {
 private:
     int highlight = 0;
+    std::string* search_str;
 
     struct RepositorySession
         {
@@ -50,6 +51,20 @@ private:
         int number_of_spaces = longest_title - repositorySession.session_name.length() + SESSION_NAME_AND_STATUS_GAP;
         std::string spaces = std::string(number_of_spaces, ' ');
         return (repositorySession.session_name + (repositorySession.is_active ? spaces + " (Active)" : spaces + "         "));
+    }
+
+    std::vector<Menu::RepositorySession> filterRepositorySessions(const std::string& search_str)
+    {
+        std::vector<RepositorySession> filtered_sessions;
+        std::copy_if(
+            repositorySessions.begin(),
+            repositorySessions.end(),
+            std::back_inserter(filtered_sessions),
+            [&search_str](const RepositorySession& rs) {
+                // if session_name contains search_str
+                return rs.session_name.find(search_str) != std::string::npos;
+            });
+        return filtered_sessions;
     }
 
     std::vector<Menu::RepositorySession> repositorySessions;

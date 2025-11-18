@@ -34,32 +34,9 @@ void FtxMenu::updateRepositorySessions()
 	}
 }
 
-void FtxMenu::attachSession(int selection)
-{
-    FtxMenu::RepositorySession* selected_repository = &this->repositorySessions[selection];
-
-        if (selected_repository->session == nullptr)
-        {
-            // If the repository is not currently associated with a session,
-            // then create a new session and mark it as active
-            const char *alias = selected_repository->session_name.c_str();
-            const char *path = selected_repository->path.c_str();
-
-            Session *session = new Session(alias, path);
-
-            selected_repository->session = session;
-            selected_repository->is_active = true;
-        }
-        else
-        {
-            // Otherwise attach to the already existing session
-            selected_repository->session->attach();
-        }
-}
-
 void FtxMenu::sortRepositorySessions()
 {
-    RepositorySession selected_repo = repositorySessions[selected_item];
+    RepositorySession selected_repo = selected_rs != nullptr ? *selected_rs : repositorySessions[selected_item];
 
 	auto sortByStatus = [](const RepositorySession& rs1, const RepositorySession& rs2) {
 		return (rs1.is_active && !rs2.is_active);
@@ -91,7 +68,8 @@ void FtxMenu::show()
 
     auto screen = ScreenInteractive::Fullscreen();
 
-    std::vector<std::string> menu_entries = getMenuEntries();
+    std::vector<std::string> original_menu_entries = getMenuEntries();
+    std::vector<std::string> menu_entries = original_menu_entries;
 
     screen.TrackMouse(false);
     
@@ -107,12 +85,24 @@ void FtxMenu::show()
 
     auto menu = Menu(&menu_entries, &selected_item, menu_option);
     
+    std::string search_str;
+    
+    InputOption input_option;
+    input_option.placeholder = "search...";
+    Component search_input = Input(&search_str, input_option);
+
     auto component = CatchEvent(menu, [&](Event event) {
         if (event == Event::CtrlC) {
             should_exit = true;
             screen.Post([&] { screen.Exit(); });
             return true;
         }
+        
+        // Let search input handle text input, but menu handles navigation
+        if (event.is_character() || event == Event::Backspace || event == Event::Delete) {
+            return search_input->OnEvent(event);
+        }
+        
         // This is not pretty... But it works
         if (event == Event::ArrowUp && selected_item == 0) {
             // Simulate pressing down arrow multiple times to reach the end
@@ -132,10 +122,36 @@ void FtxMenu::show()
     });
 
     auto renderer = Renderer(component, [&] {
+            // Filter menu entries based on search str
+            menu_entries = original_menu_entries;
+            std::vector<std::string> filtered_entries;
+            std::copy_if(
+                menu_entries.begin(),
+                menu_entries.end(),
+                std::back_inserter(filtered_entries),
+                [&search_str](const std::string& ref) {
+                    // if session_name contains search_str
+                    return ref.find(search_str) != std::string::npos;
+                });
+            menu_entries = filtered_entries;
+
+        // Calculate width based on longest menu entry
+        int max_width = 0;
+        for (const auto& entry : menu_entries) {
+            max_width = std::max(max_width, (int)entry.length());
+        }
+        max_width += 5; // Add padding
+        
         Element menu_element = menu->Render() | vscroll_indicator | frame | border;
+        Element search_element = hbox({
+            // text("Search: "),
+            text(search_str.empty() ? "search..." : search_str + " " + std::to_string(selected_item)) | flex
+        }) | frame | border | size(WIDTH, EQUAL, max_width);
+        
         return vbox({
             filler(),
             hbox({filler(), menu_element, filler()}),
+            hbox({filler(), search_element, filler()}),
             filler()
         });
     });
@@ -151,6 +167,44 @@ void FtxMenu::show()
     
     if (should_attach)
     {
-        attachSession(selected_item);
+        find_selected_repository_session(selected_item, menu_entries);
+        attachSession(selected_rs);
+    }
+}
+
+FtxMenu::RepositorySession* FtxMenu::find_selected_repository_session(int selection, std::vector<std::string> menu_entries)
+{
+    std::string entry = menu_entries[selected_item];
+
+    for (RepositorySession& rs : repositorySessions)
+    {
+        if (getSessionNameWithStatus(rs) == entry)
+        {
+            selected_rs = &rs;
+            break;
+        }
+    }
+
+    return selected_rs;
+}
+
+void FtxMenu::attachSession(FtxMenu::RepositorySession* rs)
+{
+    if (rs->session == nullptr)
+    {
+        // If the repository is not currently associated with a session,
+        // then create a new session and mark it as active
+        const char *alias = rs->session_name.c_str();
+        const char *path = rs->path.c_str();
+
+        Session *session = new Session(alias, path);
+
+        rs->session = session;
+        rs->is_active = true;
+    }
+    else
+    {
+        // Otherwise attach to the already existing session
+        rs->session->attach();
     }
 }

@@ -51,6 +51,7 @@ private:
     int longest_title;
     int selected_item;
     std::vector<FtxMenu::RepositorySession> repositorySessions;
+    FtxMenu::RepositorySession* selected_rs = nullptr;
 
     void updateLongestTitle(const std::string& session_name)
     {
@@ -83,9 +84,11 @@ private:
 
     void sortRepositorySessions();
 
-    void attachSession(int selection);
+    void attachSession(FtxMenu::RepositorySession* rs);
 
     std::vector<std::string> getMenuEntries();
+
+    FtxMenu::RepositorySession* find_selected_repository_session(int selection, std::vector<std::string> menu_entries);
 
 public:
     FtxMenu();

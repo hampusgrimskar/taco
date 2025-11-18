@@ -148,6 +148,10 @@ void FtxMenu::show()
             | border
             | size(WIDTH, EQUAL, max_width);
 
+        Element information_element = vbox({
+            text("this is some cool information")
+        }) | frame | border | size(HEIGHT, EQUAL, 8);
+
         Element search_element = hbox({
             // text("Search: "),
             text(search_str.empty() ? "search..." : search_str) | flex
@@ -155,8 +159,18 @@ void FtxMenu::show()
         
         return vbox({
             filler(),
-            hbox({filler(), menu_element, filler()}),
-            hbox({filler(), search_element, filler()}),
+            hbox({
+                filler(),
+                hbox({
+                    filler(),
+                    vbox({
+                        hbox({filler(), menu_element, filler()}),
+                        hbox({filler(), search_element, filler()}),
+                    }),
+                    information_element
+                }),
+                filler()
+            }),
             filler()
         });
     });

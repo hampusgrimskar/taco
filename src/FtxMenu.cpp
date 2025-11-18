@@ -145,7 +145,7 @@ void FtxMenu::show()
         Element menu_element = menu->Render() | vscroll_indicator | frame | border;
         Element search_element = hbox({
             // text("Search: "),
-            text(search_str.empty() ? "search..." : search_str + " " + std::to_string(selected_item)) | flex
+            text(search_str.empty() ? "search..." : search_str) | flex
         }) | frame | border | size(WIDTH, EQUAL, max_width);
         
         return vbox({

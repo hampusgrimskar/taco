@@ -137,12 +137,17 @@ void FtxMenu::show()
 
         // Calculate width based on longest menu entry
         int max_width = 0;
-        for (const auto& entry : menu_entries) {
+        for (const auto& entry : original_menu_entries) {
             max_width = std::max(max_width, (int)entry.length());
         }
         max_width += 5; // Add padding
         
-        Element menu_element = menu->Render() | vscroll_indicator | frame | border;
+        Element menu_element = menu->Render()
+            | vscroll_indicator
+            | frame
+            | border
+            | size(WIDTH, EQUAL, max_width);
+
         Element search_element = hbox({
             // text("Search: "),
             text(search_str.empty() ? "search..." : search_str) | flex

@@ -90,6 +90,8 @@ private:
 
     FtxMenu::RepositorySession* find_selected_repository_session(int selection, std::vector<std::string> menu_entries);
 
+    ftxui::Component ModalComponent(std::function<void()> hide_modal);
+
 public:
     FtxMenu();
     ~FtxMenu();

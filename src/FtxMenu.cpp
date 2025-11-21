@@ -62,6 +62,53 @@ std::vector<std::string> FtxMenu::getMenuEntries()
     return menu_entries;
 }
 
+ftxui::Component FtxMenu::ModalComponent(std::function<void()> hide_modal)
+{
+    using namespace ftxui;
+
+    auto input = std::make_shared<std::string>();
+
+    InputOption input_option;
+    Component text_input = Input(input.get(), input_option);
+
+    Component component = Container::Vertical({
+        Button("Save", [&] {
+            selected_rs->session_name = *input;
+            hide_modal();
+        }, ButtonOption::Border()),
+        Button("Cancel", hide_modal, ButtonOption::Border())
+    });
+
+    component = CatchEvent(component, [=](Event event) {
+        if (event == Event::Escape) {
+            hide_modal();
+            return true;
+        }
+
+        if (event.is_character() || event == Event::Backspace || event == Event::Delete) {
+            return text_input->OnEvent(event);
+        }
+        return false;
+    });
+
+    component |= Renderer([=, this](Element inner) {
+        Element search_element = hbox({
+            text(input->empty() ? "" : *input) | flex
+        }) | frame | border | size(WIDTH, EQUAL, 50);
+
+        return vbox({
+            text("Set Repository Alias for:"),
+            text(selected_rs->path),
+            search_element,
+            separator(),
+            inner,
+        }) | size(WIDTH, GREATER_THAN, 30) | border;
+    });
+
+    return component;
+}
+
+
 void FtxMenu::show()
 {
     using namespace ftxui;
@@ -78,12 +125,11 @@ void FtxMenu::show()
     
     auto menu_option = MenuOption();
     menu_option.focused_entry = selected_item;
-    menu_option.on_enter = [&]() {
-        should_attach = true;
-        screen.Post([&] { screen.Exit(); });
-    };
 
     auto menu = Menu(&menu_entries, &selected_item, menu_option);
+
+    bool rename_modal_shown = false;
+    auto rename_modal = ModalComponent([&]{ rename_modal_shown = false; });
     
     std::string search_str;
     
@@ -96,6 +142,29 @@ void FtxMenu::show()
             should_exit = true;
             screen.Post([&] { screen.Exit(); });
             return true;
+        }
+
+        // Enter
+        if (event == Event::Return) {
+
+            if (menu_entries[selected_item] != "No Results")
+            {
+                should_attach = true;
+                screen.Post([&] { screen.Exit(); });
+            }
+        }
+
+        // Shift + r
+        if (event == Event::R) {
+            find_selected_repository_session(selected_item, menu_entries);
+            rename_modal_shown = true;
+            return false;
+        }
+
+        // Alt + Backspace
+        if (event == Event::Special({27, 127})) {
+            search_str = "";
+            return false;
         }
         
         // Let search input handle text input, but menu handles navigation
@@ -133,6 +202,12 @@ void FtxMenu::show()
                     // if session_name contains search_str
                     return ref.find(search_str) != std::string::npos;
                 });
+
+            if (filtered_entries.size() == 0)
+            {
+                filtered_entries = {"No Results"};
+                should_attach = false;
+            }
             menu_entries = filtered_entries;
 
         // Calculate width based on longest menu entry
@@ -153,7 +228,6 @@ void FtxMenu::show()
         }) | frame | border | size(HEIGHT, EQUAL, 8);
 
         Element search_element = hbox({
-            // text("Search: "),
             text(search_str.empty() ? "search..." : search_str) | flex
         }) | frame | border | size(WIDTH, EQUAL, max_width);
         
@@ -167,13 +241,13 @@ void FtxMenu::show()
                         hbox({filler(), menu_element, filler()}),
                         hbox({filler(), search_element, filler()}),
                     }),
-                    information_element
+                    // information_element
                 }),
                 filler()
             }),
             filler()
         });
-    });
+    }) | Modal(rename_modal, &rename_modal_shown);
 
     // Menu event loop
     screen.Loop(renderer);

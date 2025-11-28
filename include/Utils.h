@@ -75,6 +75,25 @@ inline std::unordered_map<std::string, std::string> getReposFromConfigFile()
     return repos;
 }
 
+inline void updateConfigurationFile(std::unordered_map<std::string, std::string> updated_config)
+{
+    std::ofstream config_file(TACO_CONFIG_FILE, std::ios::trunc);
+
+    for (const auto& [path, alias] : updated_config)
+    {
+        config_file << path + "#" + alias << std::endl;
+    }
+
+    config_file.close();
+}
+
+inline void updateAliasInConfig(std::string repository_path, std::string new_alias)
+{
+    std::unordered_map<std::string, std::string> config = getReposFromConfigFile();
+    config[repository_path] = new_alias;
+    updateConfigurationFile(config);
+}
+
 inline bool isRepoInitialized(const std::string &path)
 {
     std::ifstream file(TACO_CONFIG_FILE);

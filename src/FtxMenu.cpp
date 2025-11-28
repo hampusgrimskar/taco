@@ -67,21 +67,26 @@ ftxui::Component FtxMenu::ModalComponent(std::function<void()> hide_modal)
     using namespace ftxui;
 
     auto input = std::make_shared<std::string>();
-
     InputOption input_option;
     Component text_input = Input(input.get(), input_option);
 
+    auto reset = [=, this](){
+        hide_modal();
+        *input = "";
+    };
+
     Component component = Container::Vertical({
-        Button("Save", [&] {
+        Button("Save", [=, this] {
             selected_rs->session_name = *input;
-            hide_modal();
+            updateAliasInConfig(selected_rs->path, selected_rs->session_name);
+            reset();
         }, ButtonOption::Border()),
-        Button("Cancel", hide_modal, ButtonOption::Border())
+        Button("Cancel", reset, ButtonOption::Border())
     });
 
-    component = CatchEvent(component, [=](Event event) {
+    component = CatchEvent(component, [=, this](Event event) {
         if (event == Event::Escape) {
-            hide_modal();
+            reset();
             return true;
         }
 
@@ -129,7 +134,10 @@ void FtxMenu::show()
     auto menu = Menu(&menu_entries, &selected_item, menu_option);
 
     bool rename_modal_shown = false;
-    auto rename_modal = ModalComponent([&]{ rename_modal_shown = false; });
+    auto rename_modal = ModalComponent([&]{
+        rename_modal_shown = false;
+        original_menu_entries = getMenuEntries();
+    });
     
     std::string search_str;
     

@@ -30,7 +30,8 @@ set(SOURCE_FILES
     src/FtxMenu.cpp
 )
 
-add_executable(taco ${SOURCE_FILES})
+add_executable(taco ${SOURCE_FILES}
+    src/FtxEvent.cpp)
 
 target_link_libraries(taco ${CURSES_LIBRARIES}
     ftxui::component

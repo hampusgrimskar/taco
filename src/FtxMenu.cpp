@@ -1,4 +1,5 @@
 #include "FtxMenu.h"
+#include "FtxEvent.cpp"
 
 FtxMenu::FtxMenu()
 {
@@ -146,56 +147,61 @@ void FtxMenu::show()
     Component search_input = Input(&search_str, input_option);
 
     auto component = CatchEvent(menu, [&](Event event) {
-        if (event == Event::CtrlC) {
-            should_exit = true;
-            screen.Post([&] { screen.Exit(); });
-            return true;
-        }
 
-        // Enter
-        if (event == Event::Return) {
-
-            if (menu_entries[selected_item] != "No Results")
-            {
-                should_attach = true;
+        switch (FtxEvent::from(event))
+        {
+            case FtxEvent::CTRL_C:
+                should_exit = true;
                 screen.Post([&] { screen.Exit(); });
-            }
-        }
+                return true;
+            
+            case FtxEvent::RETURN:
+                if (menu_entries[selected_item] != "No Results")
+                {
+                    should_attach = true;
+                    screen.Post([&] { screen.Exit(); });
+                }
+                break;
 
-        // Ctrl + r
-        if (event == Event::Special({18})) {
-            find_selected_repository_session(selected_item, menu_entries);
-            rename_modal_shown = true;
-            return false;
-        }
+            case FtxEvent::CTRL_R:
+                find_selected_repository_session(selected_item, menu_entries);
+                rename_modal_shown = true;
+                return false;
 
-        // Alt + Backspace
-        if (event == Event::Special({27, 127})) {
-            search_str = "";
-            return false;
+            case FtxEvent::ALT_BACKSPACE:
+                search_str = "";
+                return false;
+            
+            case FtxEvent::CHARACTER:
+            case FtxEvent::BACKSPACE:
+            case FtxEvent::DELETE:
+                return search_input->OnEvent(event);
+
+            case FtxEvent::UP:
+                if (selected_item == 0)
+                {
+                    // Simulate pressing down arrow multiple times to reach the end
+                    for (int i = 0; i < menu_entries.size() - 1; i++) {
+                        menu->OnEvent(Event::ArrowDown);
+                    }
+                    return true;
+                }
+                break;
+
+            case FtxEvent::DOWN:
+                if (selected_item == menu_entries.size() - 1)
+                {
+                    // Simulate pressing up arrow multiple times to reach the beginning
+                    for (int i = 0; i < menu_entries.size() - 1; i++) {
+                        menu->OnEvent(Event::ArrowUp);
+                    }
+                    return true;
+                }
+                break;
+
+            default:
+                return false;
         }
-        
-        // Let search input handle text input, but menu handles navigation
-        if (event.is_character() || event == Event::Backspace || event == Event::Delete) {
-            return search_input->OnEvent(event);
-        }
-        
-        // This is not pretty... But it works
-        if (event == Event::ArrowUp && selected_item == 0) {
-            // Simulate pressing down arrow multiple times to reach the end
-            for (int i = 0; i < menu_entries.size() - 1; i++) {
-                menu->OnEvent(Event::ArrowDown);
-            }
-            return true;
-        }
-        if (event == Event::ArrowDown && selected_item == menu_entries.size() - 1) {
-            // Simulate pressing up arrow multiple times to reach the beginning
-            for (int i = 0; i < menu_entries.size() - 1; i++) {
-                menu->OnEvent(Event::ArrowUp);
-            }
-            return true;
-        }
-        return false;
     });
 
     auto renderer = Renderer(component, [&] {

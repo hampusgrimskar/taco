@@ -16,7 +16,7 @@ namespace ScreenConstants
         " else tmux send-keys Escape; fi'; \\\n"
         " tmux set-option -g escape-time 0; \\\n"
         " tmux set -g mouse on; \\\n"
-        " bash\"\n";
+        " zsh\"\n";
 
     inline const char *ATTACH_TO_SESSION_COMMAND = "tmux attach -t %s";
     inline const char *DETACH_SESSION_COMMAND = "tmux detach -s %s";

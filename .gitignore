@@ -38,6 +38,10 @@ CMakeFiles/
 Makefile
 cmake_install.cmake
 install_manifest.txt
+CPackConfig.cmake
+CpackSourceConfig.cmake
+compile_commands.json
+_deps/
 
 # vscode settings
 .vscode

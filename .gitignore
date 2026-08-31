@@ -42,6 +42,7 @@ CPackConfig.cmake
 CpackSourceConfig.cmake
 compile_commands.json
 _deps/
+build/
 
 # vscode settings
 .vscode

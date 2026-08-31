@@ -162,8 +162,8 @@ void FtxMenu::show()
             }
         }
 
-        // Shift + r
-        if (event == Event::R) {
+        // Ctrl + r
+        if (event == Event::Special({18})) {
             find_selected_repository_session(selected_item, menu_entries);
             rename_modal_shown = true;
             return false;

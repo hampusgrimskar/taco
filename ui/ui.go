@@ -24,6 +24,10 @@ var tabTitles = []string{"Repos", "Chats", "Coming Soon"}
 type model struct {
 	activeTab Tab
 
+	// Terminal dimensions, updated on every resize.
+	width  int
+	height int
+
 	// Repos tab state.
 	repoAliases []string
 	repoCursor  int
@@ -42,6 +46,10 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+
 	case tea.KeyPressMsg:
 		switch msg.String() {
 
@@ -101,10 +109,33 @@ func (m model) View() tea.View {
 		b.WriteString(m.renderPlaceholder("Coming Soon"))
 	}
 
-	b.WriteString("\n\n")
-	b.WriteString("←/→ switch tabs · ↑/↓ navigate · q quit\n")
+	footer := "←/→ switch tabs · ↑/↓ navigate · q quit"
+	content := m.padToHeight(b.String(), footer)
 
-	return tea.NewView(b.String())
+	// Take over the whole terminal window.
+	v := tea.NewView(content)
+	v.AltScreen = true
+	return v
+}
+
+// padToHeight pushes the footer to the bottom of the terminal by inserting
+// blank lines between the body and the footer, so the view fills the window.
+func (m model) padToHeight(body, footer string) string {
+	// Before the first WindowSizeMsg arrives we don't know the height.
+	if m.height <= 0 {
+		return body + "\n\n" + footer + "\n"
+	}
+
+	bodyLines := strings.Count(body, "\n") + 1
+	footerLines := 1
+
+	// Lines to add so body + padding + footer fills the height.
+	padding := m.height - bodyLines - footerLines
+	if padding < 1 {
+		padding = 1
+	}
+
+	return body + strings.Repeat("\n", padding) + footer
 }
 
 // renderTabBar draws the tab titles, marking the active one.

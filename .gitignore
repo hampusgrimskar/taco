@@ -1,48 +1,45 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
 *.so
 *.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
 bin/
+dist/
 
-# Cmake files
-CMakeCache.txt
-CMakeFiles/
-Makefile
-cmake_install.cmake
-install_manifest.txt
-CPackConfig.cmake
-CpackSourceConfig.cmake
-compile_commands.json
-_deps/
-build/
+# Test binary, built with `go test -c`
+*.test
 
-# vscode settings
-.vscode
+# Output of the go coverage tool
+*.out
+coverage.*
+*.cover
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Build output
+/taco
+taco
+
+# Go build cache and module cache (if committed locally)
+# (usually outside repo, listed for safety)
+
+# Environment / secrets
+.env
+.env.local
+*.local
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

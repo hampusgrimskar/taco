@@ -70,20 +70,29 @@ var activeIndicatorStyle = lipgloss.NewStyle().
 	Bold(true).
 	Foreground(lipgloss.Color("42")) // green
 
-// RepoRow renders a repo menu row with a cursor marker and an active-session
-// indicator. Active repos show a filled dot; inactive show a blank.
-func RepoRow(alias string, active, selected bool) string {
+// RepoRow renders a repo menu row with a cursor marker on the left and an
+// active-session indicator aligned to indicatorCol on the right. indicatorCol
+// is the column (measured from the start of the alias) where the indicator
+// is drawn, so all indicators line up regardless of alias length.
+func RepoRow(alias string, indicatorCol int, active, selected bool) string {
 	cursor := "  "
 	if selected {
 		cursor = "› "
 	}
 
-	indicator := "  "
+	// Pad the alias out to the indicator column so the indicator aligns.
+	pad := indicatorCol - len(alias)
+	if pad < 1 {
+		pad = 1
+	}
+	padding := strings.Repeat(" ", pad)
+
+	indicator := " "
 	if active {
-		indicator = activeIndicatorStyle.Render("● ")
+		indicator = activeIndicatorStyle.Render("●")
 	}
 
-	line := cursor + indicator + alias
+	line := cursor + alias + padding + indicator
 	if selected {
 		return selectedRowStyle.Render(line)
 	}

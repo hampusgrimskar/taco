@@ -222,16 +222,26 @@ func (m model) View() tea.View {
 }
 
 // renderReposTab draws the repo menu with active sessions first, each marked
-// by an indicator.
+// by an indicator aligned in a column to the right of the longest alias.
 func (m model) renderReposTab() string {
 	ordered := orderedRepos()
 	if len(ordered) == 0 {
 		return muted("No repos yet.")
 	}
 
+	// Find the longest alias so the indicator column aligns, then place the
+	// indicator 5 positions to the right of it.
+	longest := 0
+	for _, repo := range ordered {
+		if len(repo.Alias) > longest {
+			longest = len(repo.Alias)
+		}
+	}
+	indicatorCol := longest + 5
+
 	rows := make([]string, len(ordered))
 	for i, repo := range ordered {
-		rows[i] = RepoRow(repo.Alias, repo.Session != nil, m.repoCursor == i)
+		rows[i] = RepoRow(repo.Alias, indicatorCol, repo.Session != nil, m.repoCursor == i)
 	}
 	return lipgloss.JoinVertical(lipgloss.Left, rows...)
 }

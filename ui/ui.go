@@ -16,8 +16,8 @@ type model struct {
 
 func initialModel() model {
 	return model{
-		// The map is keyed by alias -> path. Show the aliases in the list.
-		choices: repos.Instance.Keys(),
+		// Each repo has an alias; show the aliases in the list.
+		choices: repos.Aliases(),
 
 		// A map which indicates which choices are selected. We're using
 		// the  map like a mathematical set. The keys refer to the indexes

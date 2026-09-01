@@ -7,19 +7,32 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/hampusgrimskar/taco/session"
 )
 
-type Repos struct {
-	repoMap map[string]string
-	path    string
+// Repo is a registered repository. Its Session is nil until a tmux
+// session is started for it.
+type Repo struct {
+	Alias   string
+	Path    string
+	Session *session.Session
 }
 
-// Singleton pointer
-var Instance *Repos
+// Instance is the global list of registered repos.
+var Instance []*Repo
+
+// filePath is where the repo list is persisted.
+var filePath string
 
 func Init() error {
-	repos, err := loadRepos()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	filePath = filepath.Join(home, ".taco", "repositories")
 
+	repos, err := loadRepos()
 	if err != nil {
 		return err
 	}
@@ -28,22 +41,16 @@ func Init() error {
 	return nil
 }
 
-func loadRepos() (*Repos, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-	path := filepath.Join(home, ".taco", "repositories")
-
-	r := &Repos{repoMap: make(map[string]string), path: path}
-
-	if err := os.MkdirAll(filepath.Dir(r.path), 0755); err != nil {
+func loadRepos() ([]*Repo, error) {
+	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 		return nil, err
 	}
 
-	f, err := os.Open(path)
+	repos := make([]*Repo, 0)
+
+	f, err := os.Open(filePath)
 	if os.IsNotExist(err) {
-		return r, nil // no file yet -> start empty
+		return repos, nil // no file yet -> start empty
 	}
 	if err != nil {
 		return nil, err
@@ -57,72 +64,81 @@ func loadRepos() (*Repos, error) {
 			continue
 		}
 		// File format is "path#alias": path before '#', alias after.
-		// The map is keyed by alias -> path.
 		path, alias, found := strings.Cut(line, "#")
 		if !found {
 			// No alias given: use the path as its own alias.
 			alias = path
 		}
-		r.repoMap[alias] = path
+		// Session starts nil; it is set when a tmux session is created.
+		repos = append(repos, &Repo{Alias: alias, Path: path})
 	}
-	return r, scanner.Err()
+	return repos, scanner.Err()
 }
 
-func (repos *Repos) sync() error {
+func sync() error {
 	var builder strings.Builder
 
-	// Map is keyed by alias -> path. Sort by alias for stable output.
-	aliases := make([]string, 0, len(repos.repoMap))
-	for alias := range repos.repoMap {
-		aliases = append(aliases, alias)
-	}
+	// Write in alias order for stable output.
+	sorted := make([]*Repo, len(Instance))
+	copy(sorted, Instance)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Alias < sorted[j].Alias
+	})
 
-	sort.Strings(aliases)
-
-	for _, alias := range aliases {
-		path := repos.repoMap[alias]
-
-		if alias == path {
-			fmt.Fprintf(&builder, "%s\n", path) // no '#' when alias == path
+	for _, repo := range sorted {
+		if repo.Alias == repo.Path {
+			fmt.Fprintf(&builder, "%s\n", repo.Path) // no '#' when alias == path
 		} else {
-			fmt.Fprintf(&builder, "%s#%s\n", path, alias) // file format is path#alias
+			fmt.Fprintf(&builder, "%s#%s\n", repo.Path, repo.Alias) // file format is path#alias
 		}
 	}
 
-	tmp := repos.path + ".tmp"
+	tmp := filePath + ".tmp"
 	if err := os.WriteFile(tmp, []byte(builder.String()), 0644); err != nil {
 		return err
 	}
 
-	return os.Rename(tmp, repos.path) // atomic swap
+	return os.Rename(tmp, filePath) // atomic swap
 }
 
-func (repos *Repos) Get() map[string]string {
-	return repos.repoMap
-}
-
-// Keys returns all aliases (map keys) as a sorted slice,
-// suitable for feeding directly into a UI list.
-func (repos *Repos) Keys() []string {
-	keys := make([]string, 0, len(repos.repoMap))
-	for key := range repos.repoMap {
-		keys = append(keys, key)
+// Aliases returns all repo aliases as a sorted slice, suitable for
+// feeding directly into a UI list.
+func Aliases() []string {
+	aliases := make([]string, 0, len(Instance))
+	for _, repo := range Instance {
+		aliases = append(aliases, repo.Alias)
 	}
-	sort.Strings(keys)
-	return keys
+	sort.Strings(aliases)
+	return aliases
 }
 
-func (repos *Repos) GetValue(key string) (string, bool) {
-	value, ok := repos.repoMap[key]
-	return value, ok
+// Find returns the repo with the given alias, or nil if none exists.
+func Find(alias string) *Repo {
+	for _, repo := range Instance {
+		if repo.Alias == alias {
+			return repo
+		}
+	}
+	return nil
 }
 
-func (repos *Repos) SetValue(key string, value string) error {
-	repos.repoMap[key] = value
-	return repos.sync()
+// Add registers a new repo (or updates an existing alias) and persists the change.
+func Add(alias string, path string) error {
+	if r := Find(alias); r != nil {
+		r.Path = path
+	} else {
+		Instance = append(Instance, &Repo{Alias: alias, Path: path})
+	}
+	return sync()
 }
 
-func (repos *Repos) DeleteKey(key string) error {
-	delete(repos.repoMap, key)
-	return repos.sync()
+// Delete removes the repo with the given alias and persists the change.
+func Delete(alias string) error {
+	for i, repo := range Instance {
+		if repo.Alias == alias {
+			Instance = append(Instance[:i], Instance[i+1:]...)
+			return sync()
+		}
+	}
+	return nil
 }

@@ -56,11 +56,14 @@ func loadRepos() (*Repos, error) {
 		if line == "" {
 			continue
 		}
-		key, value, found := strings.Cut(line, "#")
+		// File format is "path#alias": path before '#', alias after.
+		// The map is keyed by alias -> path.
+		path, alias, found := strings.Cut(line, "#")
 		if !found {
-			value = key
+			// No alias given: use the path as its own alias.
+			alias = path
 		}
-		r.repoMap[key] = value
+		r.repoMap[alias] = path
 	}
 	return r, scanner.Err()
 }
@@ -68,20 +71,21 @@ func loadRepos() (*Repos, error) {
 func (repos *Repos) sync() error {
 	var builder strings.Builder
 
-	keys := make([]string, 0, len(repos.repoMap))
-	for k := range repos.repoMap {
-		keys = append(keys, k)
+	// Map is keyed by alias -> path. Sort by alias for stable output.
+	aliases := make([]string, 0, len(repos.repoMap))
+	for alias := range repos.repoMap {
+		aliases = append(aliases, alias)
 	}
 
-	sort.Strings(keys)
+	sort.Strings(aliases)
 
-	for _, key := range keys {
-		value := repos.repoMap[key]
+	for _, alias := range aliases {
+		path := repos.repoMap[alias]
 
-		if value == key {
-			fmt.Fprintf(&builder, "%s\n", key) // no '#' when value == key
+		if alias == path {
+			fmt.Fprintf(&builder, "%s\n", path) // no '#' when alias == path
 		} else {
-			fmt.Fprintf(&builder, "%s#%s\n", key, value)
+			fmt.Fprintf(&builder, "%s#%s\n", path, alias) // file format is path#alias
 		}
 	}
 
@@ -95,6 +99,17 @@ func (repos *Repos) sync() error {
 
 func (repos *Repos) Get() map[string]string {
 	return repos.repoMap
+}
+
+// Keys returns all aliases (map keys) as a sorted slice,
+// suitable for feeding directly into a UI list.
+func (repos *Repos) Keys() []string {
+	keys := make([]string, 0, len(repos.repoMap))
+	for key := range repos.repoMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func (repos *Repos) GetValue(key string) (string, bool) {

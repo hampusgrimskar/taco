@@ -2,8 +2,9 @@ module github.com/hampusgrimskar/taco
 
 go 1.26.3
 
+require charm.land/bubbletea/v2 v2.0.9
+
 require (
-	charm.land/bubbletea/v2 v2.0.9 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20260703014108-f5a850f9c2b7 // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect

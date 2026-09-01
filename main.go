@@ -15,9 +15,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(repos.Instance.Get())
-	os.Exit(0)
-
 	program := ui.CreateProgram()
 
 	_, error := program.Run()

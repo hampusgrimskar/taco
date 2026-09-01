@@ -2,105 +2,144 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/hampusgrimskar/taco/repos"
 )
 
+// Tab identifies a top-level view in the UI.
+type Tab int
+
+const (
+	TabRepos Tab = iota
+	TabChats
+	TabComingSoon
+)
+
+// tabTitles are the labels shown in the tab bar, in order.
+var tabTitles = []string{"Repos", "Chats", "Coming Soon"}
+
 type model struct {
-	choices  []string
-	cursor   int
-	selected map[int]struct{}
+	activeTab Tab
+
+	// Repos tab state.
+	repoAliases []string
+	repoCursor  int
 }
 
 func initialModel() model {
 	return model{
-		// Each repo has an alias; show the aliases in the list.
-		choices: repos.Aliases(),
-
-		// A map which indicates which choices are selected. We're using
-		// the  map like a mathematical set. The keys refer to the indexes
-		// of the `choices` slice, above.
-		selected: make(map[int]struct{}),
+		activeTab:   TabRepos,
+		repoAliases: repos.Aliases(),
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	// Just return `nil`, which means "no I/O right now, please."
 	return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-
-	// Is it a key press?
 	case tea.KeyPressMsg:
-
-		// Cool, what was the actual key pressed?
 		switch msg.String() {
 
-		// These keys should exit the program.
+		// Quit.
 		case "ctrl+c", "q":
 			return m, tea.Quit
 
-		// The "up" and "k" keys move the cursor up
+		// Switch tabs.
+		case "left", "h", "shift+tab":
+			m.activeTab = m.prevTab()
+		case "right", "l", "tab":
+			m.activeTab = m.nextTab()
+
+		// Move within the active tab.
 		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-
-		// The "down" and "j" keys move the cursor down
+			m.moveCursor(-1)
 		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-
-		// The "enter" key and the space bar toggle the selected state
-		// for the item that the cursor is pointing at.
-		case "enter", "space":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				delete(m.selected, m.cursor)
-			} else {
-				m.selected[m.cursor] = struct{}{}
-			}
+			m.moveCursor(1)
 		}
 	}
 
-	// Return the updated model to the Bubble Tea runtime for processing.
-	// Note that we're not returning a command.
 	return m, nil
 }
 
+// nextTab / prevTab cycle through the tabs.
+func (m model) nextTab() Tab {
+	return Tab((int(m.activeTab) + 1) % len(tabTitles))
+}
+
+func (m model) prevTab() Tab {
+	return Tab((int(m.activeTab) - 1 + len(tabTitles)) % len(tabTitles))
+}
+
+// moveCursor adjusts the cursor for whichever tab is active.
+func (m *model) moveCursor(delta int) {
+	if m.activeTab != TabRepos {
+		return
+	}
+	next := m.repoCursor + delta
+	if next >= 0 && next < len(m.repoAliases) {
+		m.repoCursor = next
+	}
+}
+
 func (m model) View() tea.View {
-	// The header
-	s := "What should we buy at the market?\n\n"
+	var b strings.Builder
 
-	// Iterate over our choices
-	for i, choice := range m.choices {
+	b.WriteString(m.renderTabBar())
+	b.WriteString("\n\n")
 
-		// Is the cursor pointing at this choice?
-		cursor := " " // no cursor
-		if m.cursor == i {
-			cursor = ">" // cursor!
-		}
-
-		// Is this choice selected?
-		checked := " " // not selected
-		if _, ok := m.selected[i]; ok {
-			checked = "x" // selected!
-		}
-
-		// Render the row
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+	switch m.activeTab {
+	case TabRepos:
+		b.WriteString(m.renderReposTab())
+	case TabChats:
+		b.WriteString(m.renderPlaceholder("Chats"))
+	case TabComingSoon:
+		b.WriteString(m.renderPlaceholder("Coming Soon"))
 	}
 
-	// The footer
-	s += "\nPress q to quit.\n"
+	b.WriteString("\n\n")
+	b.WriteString("←/→ switch tabs · ↑/↓ navigate · q quit\n")
 
-	// Send the UI for rendering
-	return tea.NewView(s)
+	return tea.NewView(b.String())
+}
+
+// renderTabBar draws the tab titles, marking the active one.
+func (m model) renderTabBar() string {
+	parts := make([]string, len(tabTitles))
+	for i, title := range tabTitles {
+		if Tab(i) == m.activeTab {
+			parts[i] = fmt.Sprintf("[ %s ]", title)
+		} else {
+			parts[i] = fmt.Sprintf("  %s  ", title)
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
+// renderReposTab draws the repo menu.
+func (m model) renderReposTab() string {
+	if len(m.repoAliases) == 0 {
+		return "No repos yet."
+	}
+
+	var b strings.Builder
+	for i, alias := range m.repoAliases {
+		cursor := " "
+		if m.repoCursor == i {
+			cursor = ">"
+		}
+		fmt.Fprintf(&b, "%s %s\n", cursor, alias)
+	}
+	return b.String()
+}
+
+// renderPlaceholder is shown for tabs with no content yet.
+func (m model) renderPlaceholder(name string) string {
+	return fmt.Sprintf("%s — nothing here yet.", name)
 }
 
 func CreateProgram() *tea.Program {

@@ -122,6 +122,17 @@ func Find(alias string) *Repo {
 	return nil
 }
 
+// WithSessions returns all repos that currently have a live session.
+func WithSessions() []*Repo {
+	active := make([]*Repo, 0)
+	for _, repo := range Instance {
+		if repo.Session != nil {
+			active = append(active, repo)
+		}
+	}
+	return active
+}
+
 // Add registers a new repo (or updates an existing alias) and persists the change.
 func Add(alias string, path string) error {
 	if r := Find(alias); r != nil {

@@ -3,7 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
+	"github.com/hampusgrimskar/taco/commands"
 	"github.com/hampusgrimskar/taco/repos"
 	"github.com/hampusgrimskar/taco/ui"
 )
@@ -15,16 +19,46 @@ func initializeRepos() {
 	}
 }
 
-func main() {
+// cleanupOnce guards terminateAllSessions so it runs at most once, whether
+// triggered by the deferred call or the signal handler.
+var cleanupOnce sync.Once
 
+// terminateAllSessions kills every tmux session started during this run.
+func terminateAllSessions() {
+	cleanupOnce.Do(func() {
+		for _, repo := range repos.WithSessions() {
+			cmd := commands.TerminateSession(repo.Session.ID)
+			if err := cmd.Run(); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to terminate session %s: %v\n", repo.Session.ID, err)
+			}
+			repo.Session = nil
+		}
+	})
+}
+
+func main() {
 	initializeRepos()
+
+	// Normal-exit and Ctrl+C path: bubbletea catches SIGINT itself and
+	// returns from Run(), so a deferred cleanup covers both.
+	defer terminateAllSessions()
+
+	// Backstop for signals bubbletea does not handle (e.g. SIGTERM): run
+	// cleanup, then exit. Ctrl+C (SIGINT) is normally consumed by bubbletea,
+	// but we listen for it too in case the program is not in the UI loop.
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigCh
+		terminateAllSessions()
+		os.Exit(1)
+	}()
 
 	program := ui.CreateProgram()
 
-	_, error := program.Run()
-
-	if error != nil {
-		fmt.Printf("Error: %v", error)
+	if _, err := program.Run(); err != nil {
+		fmt.Printf("Error: %v", err)
+		terminateAllSessions()
 		os.Exit(1)
 	}
 }

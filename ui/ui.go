@@ -2,6 +2,7 @@ package ui
 
 import (
 	"os/exec"
+	"sort"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -37,8 +38,11 @@ type model struct {
 	height int
 
 	// Repos tab state.
-	repoAliases []string
-	repoCursor  int
+	repoCursor int
+
+	// launchedAlias is the repo whose session was most recently launched,
+	// so the cursor can follow it after the list reorders.
+	launchedAlias string
 
 	// lastErr holds the most recent session error, shown in the footer.
 	lastErr error
@@ -46,9 +50,36 @@ type model struct {
 
 func initialModel() model {
 	return model{
-		activeTab:   TabRepos,
-		repoAliases: repos.Aliases(),
+		activeTab: TabRepos,
 	}
+}
+
+// orderedRepos returns the repos in display order: active sessions first
+// (alphabetical), then the rest (alphabetical). This is the single source of
+// truth for the Repos tab, so the cursor index, rendering, and launch all
+// agree on the same ordering.
+func orderedRepos() []*repos.Repo {
+	all := repos.All()
+
+	active := make([]*repos.Repo, 0, len(all))
+	inactive := make([]*repos.Repo, 0, len(all))
+	for _, r := range all {
+		if r.Session != nil {
+			active = append(active, r)
+		} else {
+			inactive = append(inactive, r)
+		}
+	}
+
+	byAlias := func(list []*repos.Repo) {
+		sort.Slice(list, func(i, j int) bool {
+			return list[i].Alias < list[j].Alias
+		})
+	}
+	byAlias(active)
+	byAlias(inactive)
+
+	return append(active, inactive...)
 }
 
 func (m model) Init() tea.Cmd {
@@ -63,7 +94,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case sessionFinishedMsg:
 		// tmux exited (user detached or session ended); bubbletea resumed.
+		// The launched repo has moved to the top, so follow it with the cursor.
 		m.lastErr = msg.err
+		if m.launchedAlias != "" {
+			for i, repo := range orderedRepos() {
+				if repo.Alias == m.launchedAlias {
+					m.repoCursor = i
+					break
+				}
+			}
+			m.launchedAlias = ""
+		}
 
 	case tea.KeyPressMsg:
 		switch msg.String() {
@@ -97,15 +138,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // under the cursor, handing the terminal to tmux via tea.ExecProcess. The
 // bubbletea program is suspended while tmux runs and resumes on exit.
 func (m model) launchSelectedRepo() (tea.Model, tea.Cmd) {
-	if m.activeTab != TabRepos || len(m.repoAliases) == 0 {
+	ordered := orderedRepos()
+	if m.activeTab != TabRepos || len(ordered) == 0 {
 		return m, nil
+	}
+	if m.repoCursor >= len(ordered) {
+		m.repoCursor = len(ordered) - 1
 	}
 
-	alias := m.repoAliases[m.repoCursor]
-	repo := repos.Find(alias)
-	if repo == nil {
-		return m, nil
-	}
+	repo := ordered[m.repoCursor]
+
+	// Remember which repo we launched so the cursor can follow it to its
+	// new position once the list reorders on return.
+	m.launchedAlias = repo.Alias
 
 	// Decide whether to create+attach (first launch) or just attach
 	// (session already exists from a previous launch this run).
@@ -136,8 +181,9 @@ func (m *model) moveCursor(delta int) {
 	if m.activeTab != TabRepos {
 		return
 	}
+	count := len(orderedRepos())
 	next := m.repoCursor + delta
-	if next >= 0 && next < len(m.repoAliases) {
+	if next >= 0 && next < count {
 		m.repoCursor = next
 	}
 }
@@ -175,15 +221,17 @@ func (m model) View() tea.View {
 	return v
 }
 
-// renderReposTab draws the repo menu.
+// renderReposTab draws the repo menu with active sessions first, each marked
+// by an indicator.
 func (m model) renderReposTab() string {
-	if len(m.repoAliases) == 0 {
+	ordered := orderedRepos()
+	if len(ordered) == 0 {
 		return muted("No repos yet.")
 	}
 
-	rows := make([]string, len(m.repoAliases))
-	for i, alias := range m.repoAliases {
-		rows[i] = Row(alias, m.repoCursor == i)
+	rows := make([]string, len(ordered))
+	for i, repo := range ordered {
+		rows[i] = RepoRow(repo.Alias, repo.Session != nil, m.repoCursor == i)
 	}
 	return lipgloss.JoinVertical(lipgloss.Left, rows...)
 }

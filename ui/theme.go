@@ -65,6 +65,31 @@ func Row(text string, selected bool) string {
 	return rowStyle.Render("  " + text)
 }
 
+// activeIndicatorStyle marks repos with a running session.
+var activeIndicatorStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(lipgloss.Color("42")) // green
+
+// RepoRow renders a repo menu row with a cursor marker and an active-session
+// indicator. Active repos show a filled dot; inactive show a blank.
+func RepoRow(alias string, active, selected bool) string {
+	cursor := "  "
+	if selected {
+		cursor = "› "
+	}
+
+	indicator := "  "
+	if active {
+		indicator = activeIndicatorStyle.Render("● ")
+	}
+
+	line := cursor + indicator + alias
+	if selected {
+		return selectedRowStyle.Render(line)
+	}
+	return rowStyle.Render(line)
+}
+
 // Panel wraps content in a bordered box sized to the given width/height.
 // When width/height are <= 0 the panel sizes to its content.
 func Panel(content string, width, height int) string {

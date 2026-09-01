@@ -122,6 +122,11 @@ func Find(alias string) *Repo {
 	return nil
 }
 
+// All returns the live repo list.
+func All() []*Repo {
+	return Instance
+}
+
 // WithSessions returns all repos that currently have a live session.
 func WithSessions() []*Repo {
 	active := make([]*Repo, 0)

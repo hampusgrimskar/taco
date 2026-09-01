@@ -25,20 +25,20 @@ const TERMINATE_SESSION_COMMAND = `tmux kill-session -t %s`
 
 func CreateSession(sessionId string, directory string) *exec.Cmd {
 	cmd := fmt.Sprintf(CREATE_SESSION_COMMAND, sessionId, directory)
-	return exec.Command(cmd)
+	return exec.Command("sh", "-c", cmd)
 }
 
 func AttachToSession(sessionId string) *exec.Cmd {
 	cmd := fmt.Sprintf(ATTACH_SESSION_COMMAND, sessionId)
-	return exec.Command(cmd)
+	return exec.Command("sh", "-c", cmd)
 }
 
 func DetachFromSession(sessionId string) *exec.Cmd {
 	cmd := fmt.Sprintf(DETACH_SESSION_COMMAND, sessionId)
-	return exec.Command(cmd)
+	return exec.Command("sh", "-c", cmd)
 }
 
 func TerminateSession(sessionId string) *exec.Cmd {
 	cmd := fmt.Sprintf(TERMINATE_SESSION_COMMAND, sessionId)
-	return exec.Command(cmd)
+	return exec.Command("sh", "-c", cmd)
 }

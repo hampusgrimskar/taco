@@ -1,10 +1,14 @@
 package ui
 
 import (
+	"os/exec"
+
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
+	"github.com/hampusgrimskar/taco/commands"
 	"github.com/hampusgrimskar/taco/repos"
+	"github.com/hampusgrimskar/taco/session"
 )
 
 // Tab identifies a top-level view in the UI.
@@ -19,6 +23,12 @@ const (
 // tabTitles are the labels shown in the tab bar, in order.
 var tabTitles = []string{"Repos", "Chats", "Coming Soon"}
 
+// sessionFinishedMsg is sent when a tmux session (run via tea.ExecProcess)
+// exits and the bubbletea program resumes.
+type sessionFinishedMsg struct {
+	err error
+}
+
 type model struct {
 	activeTab Tab
 
@@ -29,6 +39,9 @@ type model struct {
 	// Repos tab state.
 	repoAliases []string
 	repoCursor  int
+
+	// lastErr holds the most recent session error, shown in the footer.
+	lastErr error
 }
 
 func initialModel() model {
@@ -48,6 +61,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 
+	case sessionFinishedMsg:
+		// tmux exited (user detached or session ended); bubbletea resumed.
+		m.lastErr = msg.err
+
 	case tea.KeyPressMsg:
 		switch msg.String() {
 
@@ -66,10 +83,43 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.moveCursor(-1)
 		case "down", "j":
 			m.moveCursor(1)
+
+		// Launch / attach the selected repo's tmux session.
+		case "enter":
+			return m.launchSelectedRepo()
 		}
 	}
 
 	return m, nil
+}
+
+// launchSelectedRepo starts (or attaches to) the tmux session for the repo
+// under the cursor, handing the terminal to tmux via tea.ExecProcess. The
+// bubbletea program is suspended while tmux runs and resumes on exit.
+func (m model) launchSelectedRepo() (tea.Model, tea.Cmd) {
+	if m.activeTab != TabRepos || len(m.repoAliases) == 0 {
+		return m, nil
+	}
+
+	alias := m.repoAliases[m.repoCursor]
+	repo := repos.Find(alias)
+	if repo == nil {
+		return m, nil
+	}
+
+	// Decide whether to create+attach (first launch) or just attach
+	// (session already exists from a previous launch this run).
+	var cmd *exec.Cmd
+	if repo.Session == nil {
+		repo.Session = session.New()
+		cmd = commands.CreateSession(repo.Session.ID, repo.Path)
+	} else {
+		cmd = commands.AttachToSession(repo.Session.ID)
+	}
+
+	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+		return sessionFinishedMsg{err: err}
+	})
 }
 
 // nextTab / prevTab cycle through the tabs.
@@ -112,7 +162,10 @@ func (m model) View() tea.View {
 	panelHeight := m.height - 4 // tab bar (1) + blank (1) + footer (2)
 	panel := Panel(body, m.width, panelHeight)
 
-	footer := Help("←/→ switch tabs · ↑/↓ navigate · q quit")
+	footer := Help("←/→ switch tabs · ↑/↓ navigate · enter open · q quit")
+	if m.lastErr != nil {
+		footer = Help("session error: "+m.lastErr.Error()) + "\n" + footer
+	}
 
 	content := lipgloss.JoinVertical(lipgloss.Left, tabBar, panel, footer)
 

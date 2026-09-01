@@ -1,10 +1,8 @@
 package ui
 
 import (
-	"fmt"
-	"strings"
-
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/hampusgrimskar/taco/repos"
 )
@@ -95,22 +93,28 @@ func (m *model) moveCursor(delta int) {
 }
 
 func (m model) View() tea.View {
-	var b strings.Builder
+	// Tab bar across the top.
+	tabBar := TabBar(tabTitles, int(m.activeTab))
 
-	b.WriteString(m.renderTabBar())
-	b.WriteString("\n\n")
-
+	// Body for the active tab.
+	var body string
 	switch m.activeTab {
 	case TabRepos:
-		b.WriteString(m.renderReposTab())
+		body = m.renderReposTab()
 	case TabChats:
-		b.WriteString(m.renderPlaceholder("Chats"))
+		body = m.renderPlaceholder("Chats")
 	case TabComingSoon:
-		b.WriteString(m.renderPlaceholder("Coming Soon"))
+		body = m.renderPlaceholder("Coming Soon")
 	}
 
-	footer := "←/→ switch tabs · ↑/↓ navigate · q quit"
-	content := m.padToHeight(b.String(), footer)
+	// Wrap the body in a bordered panel that fills the window (minus the
+	// tab bar and footer rows).
+	panelHeight := m.height - 4 // tab bar (1) + blank (1) + footer (2)
+	panel := Panel(body, m.width, panelHeight)
+
+	footer := Help("←/→ switch tabs · ↑/↓ navigate · q quit")
+
+	content := lipgloss.JoinVertical(lipgloss.Left, tabBar, panel, footer)
 
 	// Take over the whole terminal window.
 	v := tea.NewView(content)
@@ -118,59 +122,22 @@ func (m model) View() tea.View {
 	return v
 }
 
-// padToHeight pushes the footer to the bottom of the terminal by inserting
-// blank lines between the body and the footer, so the view fills the window.
-func (m model) padToHeight(body, footer string) string {
-	// Before the first WindowSizeMsg arrives we don't know the height.
-	if m.height <= 0 {
-		return body + "\n\n" + footer + "\n"
-	}
-
-	bodyLines := strings.Count(body, "\n") + 1
-	footerLines := 1
-
-	// Lines to add so body + padding + footer fills the height.
-	padding := m.height - bodyLines - footerLines
-	if padding < 1 {
-		padding = 1
-	}
-
-	return body + strings.Repeat("\n", padding) + footer
-}
-
-// renderTabBar draws the tab titles, marking the active one.
-func (m model) renderTabBar() string {
-	parts := make([]string, len(tabTitles))
-	for i, title := range tabTitles {
-		if Tab(i) == m.activeTab {
-			parts[i] = fmt.Sprintf("[ %s ]", title)
-		} else {
-			parts[i] = fmt.Sprintf("  %s  ", title)
-		}
-	}
-	return strings.Join(parts, " ")
-}
-
 // renderReposTab draws the repo menu.
 func (m model) renderReposTab() string {
 	if len(m.repoAliases) == 0 {
-		return "No repos yet."
+		return muted("No repos yet.")
 	}
 
-	var b strings.Builder
+	rows := make([]string, len(m.repoAliases))
 	for i, alias := range m.repoAliases {
-		cursor := " "
-		if m.repoCursor == i {
-			cursor = ">"
-		}
-		fmt.Fprintf(&b, "%s %s\n", cursor, alias)
+		rows[i] = Row(alias, m.repoCursor == i)
 	}
-	return b.String()
+	return lipgloss.JoinVertical(lipgloss.Left, rows...)
 }
 
 // renderPlaceholder is shown for tabs with no content yet.
 func (m model) renderPlaceholder(name string) string {
-	return fmt.Sprintf("%s — nothing here yet.", name)
+	return muted(name + " — nothing here yet.")
 }
 
 func CreateProgram() *tea.Program {

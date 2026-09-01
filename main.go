@@ -2,14 +2,18 @@ package main
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/hampusgrimskar/taco/commands"
+	"github.com/hampusgrimskar/taco/ui"
 )
 
 func main() {
-	output, error := commands.Example().Output()
+	program := ui.CreateProgram()
+
+	_, error := program.Run()
+
 	if error != nil {
-		fmt.Println(error.Error())
+		fmt.Printf("Error: %v", error)
+		os.Exit(1)
 	}
-	fmt.Println(string(output))
 }

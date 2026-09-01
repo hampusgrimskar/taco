@@ -79,3 +79,4 @@ DISABLE SESSION DETACH WITH ESCAPE WHILE IN VI EDITOR
 	[ #{pane_current_command} != git ]; \
 	then tmux detach; \
 	else tmux send-keys Escape; fi"
+

@@ -23,6 +23,9 @@ type model struct {
 	repoScroll int    // index of the first visible row (scroll offset)
 	query      string // current search box contents
 
+	// gitCache holds git metadata per repo path for the info panel.
+	gitCache map[string]gitInfo
+
 	// launchedAlias is the repo whose session was most recently launched,
 	// so the cursor can follow it after the list reorders.
 	launchedAlias string
@@ -64,6 +67,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		// Load git info for the initially selected repo.
+		return m, m.ensureGitInfo()
+
+	case gitInfoMsg:
+		if m.gitCache == nil {
+			m.gitCache = make(map[string]gitInfo)
+		}
+		m.gitCache[msg.path] = gitInfo{
+			branch:  msg.branch,
+			commits: msg.commits,
+			loaded:  true,
+		}
 
 	case sessionFinishedMsg:
 		// tmux exited (user detached or session ended); bubbletea resumed.
@@ -131,8 +146,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Navigate within the active tab.
 		case "up":
 			m.moveCursor(-1)
+			return m, m.ensureGitInfo()
 		case "down":
 			m.moveCursor(1)
+			return m, m.ensureGitInfo()
 
 		// Launch / attach the selected repo's tmux session.
 		case "enter":
@@ -141,17 +158,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Clear the search query.
 		case "esc", "alt+backspace":
 			m.setQuery("")
+			return m, m.ensureGitInfo()
 
 		// Delete the last search character.
 		case "backspace":
 			if m.query != "" {
 				m.setQuery(m.query[:len(m.query)-1])
 			}
+			return m, m.ensureGitInfo()
 
 		// Any single printable character is typed into the search box.
 		default:
 			if len(key) == 1 && key[0] >= 0x20 && key[0] < 0x7f {
 				m.setQuery(m.query + key)
+				return m, m.ensureGitInfo()
 			}
 		}
 	}
@@ -189,8 +209,19 @@ func (m model) View() tea.View {
 		case m.deleting:
 			panel = PanelCentered(m.renderDeleteDialog(), m.width, panelHeight)
 		default:
-			body := m.renderReposTab(innerHeight)
-			panel = PanelCentered(body, m.width, panelHeight)
+			if m.width >= infoWidthThreshold {
+				// List (left) + info panel (right), side by side.
+				listWidth := m.width - infoPanelWidth
+				_, innerH := panelInner(listWidth, panelHeight)
+				body := m.renderReposTab(innerH)
+				listBox := PanelCentered(body, listWidth, panelHeight)
+				infoBox := m.renderRepoInfo(m.selectedRepo(), panelHeight)
+				panel = lipgloss.JoinHorizontal(lipgloss.Top, listBox, infoBox)
+			} else {
+				// Narrow terminal: list only, full width.
+				body := m.renderReposTab(innerHeight)
+				panel = PanelCentered(body, m.width, panelHeight)
+			}
 		}
 	case TabChats:
 		panel = PanelCentered(m.renderPlaceholder("Chats"), m.width, panelHeight)

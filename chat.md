@@ -4,7 +4,7 @@
     "session_id": "d5056936-e10c-43fa-be21-aef946d4f51d",
     "cwd": "/Users/egriham/repos/misc/taco",
     "created_at": "2026-09-01T13:29:28.021352Z",
-    "updated_at": "2026-09-02T08:47:46.025334Z",
+    "updated_at": "2026-09-02T11:21:24.525946Z",
     "title": "why can i not access repos.Instance from ui/ui.go?",
     "session_created_reason": "subagent",
     "session_state": {
@@ -10231,10 +10231,760 @@
               }
             ],
             "user_prompt_length": 272
+          },
+          {
+            "loop_id": {
+              "agent_id": {
+                "name": "kiro_default",
+                "parent_id": null,
+                "rand": null
+              },
+              "rand": 3890808422
+            },
+            "result": {
+              "Ok": {
+                "id": "30b3e121-648a-402b-a343-beee648504c1",
+                "role": "assistant",
+                "content": [
+                  {
+                    "kind": "thinking",
+                    "data": {
+                      "text": "",
+                      "signature": null,
+                      "redactedContent": [
+                        46,
+                        75,
+                        84,
+                        82,
+                        126,
+                        126,
+                        101,
+                        121,
+                        74,
+                        108,
+                        98,
+                        109,
+                        78,
+                        121,
+                        101,
+                        88,
+                        66,
+                        48,
+                        97,
+                        87,
+                        57,
+                        117,
+                        85,
+                        109,
+                        86,
+                        110,
+                        97,
+                        87,
+                        57,
+                        117,
+                        73,
+                        106,
+                        112,
+                        117,
+                        100,
+                        87,
+                        120,
+                        115,
+                        76,
+                        67,
+                        74,
+                        116,
+                        98,
+                        50,
+                        82,
+                        108,
+                        98,
+                        69,
+                        104,
+                        104,
+                        99,
+                        50,
+                        103,
+                        105,
+                        79,
+                        105,
+                        74,
+                        68,
+                        98,
+                        69,
+                        78,
+                        110,
+                        90,
+                        70,
+                        108,
+                        105,
+                        82,
+                        72,
+                        104,
+                        116,
+                        77,
+                        106,
+                        65,
+                        105,
+                        76,
+                        67,
+                        74,
+                        122,
+                        98,
+                        71,
+                        57,
+                        48,
+                        99,
+                        121,
+                        73,
+                        54,
+                        87,
+                        49,
+                        48,
+                        115,
+                        73,
+                        110,
+                        89,
+                        105,
+                        79,
+                        106,
+                        70,
+                        57
+                      ],
+                      "modelId": "auto"
+                    }
+                  },
+                  {
+                    "kind": "text",
+                    "data": "Performance is not a concern at all — this is a terminal UI redrawing a few dozen lines of text on keypress. There's no rendering cost worth worrying about; a side info panel adds a handful of string operations per frame. So go for it purely on UX grounds.\n\nLet me think about the layout and what to show, then confirm with you before building.\n\n**Layout:** split the panel area horizontally into two boxes side by side using `lipgloss.JoinHorizontal`:\n- **Left** — the repo list (narrower now, e.g. ~40% or a fixed width).\n- **Right** — an info panel for the highlighted repo.\n\nThe width math needs care: the two boxes plus their borders must sum to `m.width`. I'd give the list a share and the info panel the rest, both using the same `panelInner`-style border/padding accounting we already have. The search box and footer stay full-width below.\n\n**What to show in the info panel** — this is the real question. Options, given what a `Repo` currently holds (`Alias`, `Path`, `Session`):\n- **Alias** and full **path** (path is often truncated in the list, so showing it in full here is genuinely useful)\n- **Session status** — active/inactive, and the session ID if running\n- Cheap **git info** read live from the repo: current branch, dirty/clean, last commit. This is the most valuable content, but it means running `git` (or reading `.git/HEAD`) per highlighted repo. Reading `.git/HEAD` for the branch is basically free; running `git status` is heavier but still fine if done lazily (only for the highlighted repo, maybe cached).\n\n**A design decision to make:** how much git info, and how to fetch it.\n- **Minimal (zero cost):** alias, full path, session status, branch (read from `.git/HEAD` directly — a single small file read, no subprocess).\n- **Richer (small cost):** add dirty/clean and last-commit via `git`, run as an async `tea.Cmd` when the highlight changes so it never blocks the UI, with a cache keyed by path.\n\nMy recommendation: start with the **minimal, zero-subprocess** version (alias, path, session, branch from `.git/HEAD`). It's instant, needs no async machinery, and already makes the space useful. We can layer in async `git status` later if you want dirty-state/commit info.\n\nTwo things I want your call on before I build:\n1. **What content** — minimal (alias/path/session/branch) to start, or do you want the richer git status/last-commit now (async)?\n2. **Behavior on narrow terminals** — if the terminal is too narrow to fit both boxes reasonably, should I collapse back to the single full-width list? (I'd recommend yes, with a width threshold.)\n\nOnce you confirm those, I'll implement it."
+                  }
+                ],
+                "meta": {
+                  "timestamp": 1788339081
+                }
+              }
+            },
+            "message_ids": [
+              "5cb7aae2-4e00-44bb-bc06-d87c5a233b8f",
+              "ebdca335-5760-4e71-9bd0-25acc6714230"
+            ],
+            "total_request_count": 1,
+            "number_of_cycles": 0,
+            "builtin_tool_uses": 0,
+            "turn_duration": {
+              "secs": 15,
+              "nanos": 763889791
+            },
+            "end_reason": "UserTurnEnd",
+            "end_timestamp": "2026-09-02T08:51:21.484505Z",
+            "input_token_count": 0,
+            "output_token_count": 0,
+            "cache_read_input_token_count": 0,
+            "cache_write_input_token_count": 0,
+            "model": "auto",
+            "assistant_response_length": 2637,
+            "request_attempts": 1,
+            "context_usage_percentage": 24.7869,
+            "final_context_usage_percentage": 24.7869,
+            "metering_usage": [
+              {
+                "value": 0.5156880114427861,
+                "unit": "credit",
+                "unitPlural": "credits"
+              }
+            ],
+            "user_prompt_length": 304
+          },
+          {
+            "loop_id": {
+              "agent_id": {
+                "name": "kiro_default",
+                "parent_id": null,
+                "rand": null
+              },
+              "rand": 3989375498
+            },
+            "result": {
+              "Ok": {
+                "id": "593e9bff-7a78-4793-98c4-b57ef1eabc42",
+                "role": "assistant",
+                "content": [
+                  {
+                    "kind": "thinking",
+                    "data": {
+                      "text": "",
+                      "signature": null,
+                      "redactedContent": [
+                        46,
+                        75,
+                        84,
+                        82,
+                        126,
+                        126,
+                        101,
+                        121,
+                        74,
+                        108,
+                        98,
+                        109,
+                        78,
+                        121,
+                        101,
+                        88,
+                        66,
+                        48,
+                        97,
+                        87,
+                        57,
+                        117,
+                        85,
+                        109,
+                        86,
+                        110,
+                        97,
+                        87,
+                        57,
+                        117,
+                        73,
+                        106,
+                        112,
+                        117,
+                        100,
+                        87,
+                        120,
+                        115,
+                        76,
+                        67,
+                        74,
+                        116,
+                        98,
+                        50,
+                        82,
+                        108,
+                        98,
+                        69,
+                        104,
+                        104,
+                        99,
+                        50,
+                        103,
+                        105,
+                        79,
+                        105,
+                        74,
+                        68,
+                        98,
+                        69,
+                        78,
+                        110,
+                        90,
+                        70,
+                        108,
+                        105,
+                        82,
+                        72,
+                        104,
+                        116,
+                        77,
+                        106,
+                        65,
+                        105,
+                        76,
+                        67,
+                        74,
+                        122,
+                        98,
+                        71,
+                        57,
+                        48,
+                        99,
+                        121,
+                        73,
+                        54,
+                        87,
+                        49,
+                        48,
+                        115,
+                        73,
+                        110,
+                        89,
+                        105,
+                        79,
+                        106,
+                        70,
+                        57
+                      ],
+                      "modelId": "auto"
+                    }
+                  },
+                  {
+                    "kind": "text",
+                    "data": "Good — git info it is: current branch and the last 5 commit titles. Let me think about how to fetch it, because that decision shapes the implementation.\n\n**Branch** — cheap: read `.git/HEAD`, which contains `ref: refs/heads/<branch>`. A single small file read, no subprocess. (Detached HEAD would contain a raw SHA; I'll handle that.)\n\n**Last 5 commit titles** — this needs `git log --format=%s -n 5`. That's a subprocess. Two ways to run it:\n- **Async** (`tea.Cmd`): fire it when the highlight changes, deliver results via a message, cache by path. Never blocks the UI even on a slow/large repo. More machinery.\n- **Synchronous**: run it inline in `View`/on cursor move. Simpler, but `git log` runs on every highlight change and *could* stutter on a huge repo or slow disk, and running it in `View` (which fires every frame) would be wasteful.\n\nThe right approach is **async with a cache**: when the highlighted repo changes, kick off a `tea.Cmd` that runs `git log` for that path; store the result keyed by path so re-highlighting is instant and we don't re-run. This keeps the UI responsive regardless of repo size.\n\n**Layout:** split the panel row into list (left) + info (right) via `JoinHorizontal`, with a width threshold to collapse to just the list on narrow terminals (you didn't object, and it avoids a cramped mess).\n\nHere's my plan:\n\n1. **`repos` package**: `GitBranch(path) string` (reads `.git/HEAD`) and `GitRecentCommits(path, n) []string` (runs `git log`). Both tolerate non-repos / errors gracefully.\n2. **`ui`**: an async `tea.Cmd` (`gitInfoCmd`) + a `gitInfoMsg{path, branch, commits, err}`, a cache `map[string]gitInfo` on the model, and logic to trigger the fetch when the highlighted repo's path changes.\n3. **Rendering**: an info panel (`renderRepoInfo`) showing branch + commit titles; `View` joins list + info horizontally, collapsing on narrow width.\n4. **Triggering**: on `moveCursor` and after launch/return, if the highlighted repo's info isn't cached, emit the fetch `Cmd`.\n\nOne implementation nuance: `moveCursor` currently returns nothing (it's called from the key switch which returns `m, nil`). To fire an async `Cmd` on highlight change, I'll have the relevant key cases return the `Cmd`. I'll compute \"did the highlighted repo change, and is its info uncached?\" and return `gitInfoCmd` when so.\n\nBefore I build — one quick confirmation: **collapse the info panel on narrow terminals** (below some width, show just the list), yes? And is a threshold around 80 columns reasonable, or do you want it always shown? Once you confirm I'll implement the whole thing."
+                  }
+                ],
+                "meta": {
+                  "timestamp": 1788347814
+                }
+              }
+            },
+            "message_ids": [
+              "51835b90-7806-47cf-800f-61d7c256df6e",
+              "41b72d40-9b72-4450-978e-2392a835b45c"
+            ],
+            "total_request_count": 1,
+            "number_of_cycles": 0,
+            "builtin_tool_uses": 0,
+            "turn_duration": {
+              "secs": 19,
+              "nanos": 218394125
+            },
+            "end_reason": "UserTurnEnd",
+            "end_timestamp": "2026-09-02T11:16:54.537956Z",
+            "input_token_count": 0,
+            "output_token_count": 0,
+            "cache_read_input_token_count": 0,
+            "cache_write_input_token_count": 0,
+            "model": "auto",
+            "assistant_response_length": 2605,
+            "request_attempts": 1,
+            "context_usage_percentage": 24.900501,
+            "final_context_usage_percentage": 24.900501,
+            "metering_usage": [
+              {
+                "value": 0.8910637519071312,
+                "unit": "credit",
+                "unitPlural": "credits"
+              }
+            ],
+            "user_prompt_length": 160
+          },
+          {
+            "loop_id": {
+              "agent_id": {
+                "name": "kiro_default",
+                "parent_id": null,
+                "rand": null
+              },
+              "rand": 2829483449
+            },
+            "result": {
+              "Ok": {
+                "id": "5035bd05-130b-494a-86bb-f1c8012fcec3",
+                "role": "assistant",
+                "content": [
+                  {
+                    "kind": "thinking",
+                    "data": {
+                      "text": "",
+                      "signature": null,
+                      "redactedContent": [
+                        46,
+                        75,
+                        84,
+                        82,
+                        126,
+                        126,
+                        101,
+                        121,
+                        74,
+                        108,
+                        98,
+                        109,
+                        78,
+                        121,
+                        101,
+                        88,
+                        66,
+                        48,
+                        97,
+                        87,
+                        57,
+                        117,
+                        85,
+                        109,
+                        86,
+                        110,
+                        97,
+                        87,
+                        57,
+                        117,
+                        73,
+                        106,
+                        112,
+                        117,
+                        100,
+                        87,
+                        120,
+                        115,
+                        76,
+                        67,
+                        74,
+                        116,
+                        98,
+                        50,
+                        82,
+                        108,
+                        98,
+                        69,
+                        104,
+                        104,
+                        99,
+                        50,
+                        103,
+                        105,
+                        79,
+                        105,
+                        74,
+                        68,
+                        98,
+                        69,
+                        78,
+                        110,
+                        90,
+                        70,
+                        108,
+                        105,
+                        82,
+                        72,
+                        104,
+                        116,
+                        77,
+                        106,
+                        65,
+                        105,
+                        76,
+                        67,
+                        74,
+                        122,
+                        98,
+                        71,
+                        57,
+                        48,
+                        99,
+                        121,
+                        73,
+                        54,
+                        87,
+                        49,
+                        48,
+                        115,
+                        73,
+                        110,
+                        89,
+                        105,
+                        79,
+                        106,
+                        70,
+                        57
+                      ],
+                      "modelId": "auto"
+                    }
+                  },
+                  {
+                    "kind": "text",
+                    "data": "Now wire into the model and `View`/`Update`. Add the cache field:"
+                  },
+                  {
+                    "kind": "toolUse",
+                    "data": {
+                      "toolUseId": "toolu_bdrk_01GWLCM8kju3evA1ntHC98Dk",
+                      "name": "write",
+                      "input": {
+                        "__tool_use_purpose": "Add the git-info cache to the model.",
+                        "command": "strReplace",
+                        "newStr": "\t// Repos tab state.\n\trepoCursor int\n\trepoScroll int    // index of the first visible row (scroll offset)\n\tquery      string // current search box contents\n\n\t// gitCache holds git metadata per repo path for the info panel.\n\tgitCache map[string]gitInfo",
+                        "oldStr": "\t// Repos tab state.\n\trepoCursor int\n\trepoScroll int    // index of the first visible row (scroll offset)\n\tquery      string // current search box contents",
+                        "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+                      }
+                    }
+                  }
+                ],
+                "meta": {
+                  "timestamp": 1788347984
+                }
+              }
+            },
+            "message_ids": [
+              "120bbe22-1d31-498d-aee1-ea8340ec92a4",
+              "7ede1df5-c32a-49a7-9dc5-04b3b46963bf",
+              "7f78e199-7777-488f-bc72-cf9312a01f3f",
+              "fedc6bd4-0955-4ead-953a-d6b36456e139",
+              "406423a5-b8b6-4ba4-8793-f689386034fb",
+              "28f3871a-a0de-4257-9c4e-17bd803ab466",
+              "9cdae3e0-9d93-4d3c-8ae4-0859c43d2d30",
+              "2766b55d-249d-420d-a705-526cfa14c88b"
+            ],
+            "total_request_count": 4,
+            "number_of_cycles": 4,
+            "builtin_tool_uses": 4,
+            "turn_duration": {
+              "secs": 95,
+              "nanos": 839710792
+            },
+            "end_reason": "ToolUseRejected",
+            "end_timestamp": "2026-09-02T11:19:44.372422Z",
+            "input_token_count": 0,
+            "output_token_count": 0,
+            "cache_read_input_token_count": 0,
+            "cache_write_input_token_count": 0,
+            "model": "auto",
+            "assistant_response_length": 555,
+            "request_attempts": 4,
+            "context_usage_percentage": 25.274199,
+            "final_context_usage_percentage": 25.274199,
+            "metering_usage": [
+              {
+                "value": 0.5124258995024875,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.46591020331674954,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.641472739800995,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.48697873432835825,
+                "unit": "credit",
+                "unitPlural": "credits"
+              }
+            ],
+            "user_prompt_length": 213
+          },
+          {
+            "loop_id": {
+              "agent_id": {
+                "name": "kiro_default",
+                "parent_id": null,
+                "rand": null
+              },
+              "rand": 820350861
+            },
+            "result": {
+              "Ok": {
+                "id": "593d12b2-6fea-4d69-94cd-b2fb3fc430fe",
+                "role": "assistant",
+                "content": [
+                  {
+                    "kind": "thinking",
+                    "data": {
+                      "text": "",
+                      "signature": null,
+                      "redactedContent": [
+                        46,
+                        75,
+                        84,
+                        82,
+                        126,
+                        126,
+                        101,
+                        121,
+                        74,
+                        108,
+                        98,
+                        109,
+                        78,
+                        121,
+                        101,
+                        88,
+                        66,
+                        48,
+                        97,
+                        87,
+                        57,
+                        117,
+                        85,
+                        109,
+                        86,
+                        110,
+                        97,
+                        87,
+                        57,
+                        117,
+                        73,
+                        106,
+                        112,
+                        117,
+                        100,
+                        87,
+                        120,
+                        115,
+                        76,
+                        67,
+                        74,
+                        116,
+                        98,
+                        50,
+                        82,
+                        108,
+                        98,
+                        69,
+                        104,
+                        104,
+                        99,
+                        50,
+                        103,
+                        105,
+                        79,
+                        105,
+                        74,
+                        68,
+                        98,
+                        69,
+                        78,
+                        110,
+                        90,
+                        70,
+                        108,
+                        105,
+                        82,
+                        72,
+                        104,
+                        116,
+                        77,
+                        106,
+                        65,
+                        105,
+                        76,
+                        67,
+                        74,
+                        122,
+                        98,
+                        71,
+                        57,
+                        48,
+                        99,
+                        121,
+                        73,
+                        54,
+                        87,
+                        49,
+                        48,
+                        115,
+                        73,
+                        110,
+                        89,
+                        105,
+                        79,
+                        106,
+                        70,
+                        57
+                      ],
+                      "modelId": "auto"
+                    }
+                  },
+                  {
+                    "kind": "text",
+                    "data": "All verified (tests removed):\n- **Git helpers** — against a real temp repo: `GitBranch` returns `main`, `GitRecentCommits` returns the last commits newest-first (`second commit`, `first commit`), and non-repo paths return empty gracefully. ✓\n- **Fetch dedup** — `ensureGitInfo` returns a `Cmd` the first time a repo is highlighted and `nil` afterward (no duplicate fetches). ✓\n- **Section rendering** — the panel shows the alias, `Branch`/`develop`, and `Recent commits`/commit titles. ✓\n\nFeature summary:\n\n**Layout** — when the terminal is ≥ 90 cols, the panel row splits into the repo list (left) and a 40-col info panel (right) via `JoinHorizontal`. Below that width it collapses to the full-width list.\n\n**Content** — the info panel shows the highlighted repo's alias, current **branch**, and **last 5 commit titles**.\n\n**Performance** — git data is fetched **asynchronously** (`tea.Cmd`) when the highlight changes and **cached per path**, so navigation never blocks and re-highlighting is instant. Branch is read straight from `.git/HEAD` (no subprocess); commits use `git log`.\n\n**Extensibility (as you asked)** — the panel is built from an ordered `infoSections` slice in `repo_info.go`. Each section is `{title, render(repo, gitInfo) string}`. To add or remove information later, you just add/remove an entry in `infoSections` — no changes to the render loop or layout. The `gitInfo` struct is where you'd add new cached fields (e.g. dirty state) if a future section needs them.\n\nBuilds, vets, gofmt-clean.\n\n**Verification status:** git logic, caching/dedup, and section rendering are test-verified. The side-by-side layout, width-collapse, and async refresh-on-navigation need a real TTY to confirm visually — please run `go run .` in a wide terminal, move through repos, and check the info panel updates with branch + commits (and that it disappears when you shrink the window below ~90 cols).\n\nOne note: the info fetch fires on `↑`/`↓` and on search changes, but not currently after a rename (the path is unchanged so the cache is still valid — fine) or when the very first repo loads before any keypress (handled via the `WindowSizeMsg` fetch). If you later add a section showing mutable state (like dirty status) that should refresh more eagerly, tell me and I'll add a refresh trigger."
+                  }
+                ],
+                "meta": {
+                  "timestamp": 1788348084
+                }
+              }
+            },
+            "message_ids": [
+              "762d38e1-1673-4678-8797-e10e2ed0e537",
+              "62ff6571-1b72-47ae-b9db-cec517c4c235",
+              "5aab6b22-c50a-49ec-a74b-17e700d47330",
+              "50dab1fe-fb94-4547-8472-03bedfd1f4f1",
+              "53ee1914-fceb-4300-b554-5ad027ed6b25",
+              "4c073c6a-e6af-4a9b-b9d6-92951f32ba27",
+              "afc3333b-aae0-40ea-92a3-cbad07cb6dd9",
+              "2c99546c-d970-4280-97b5-20bd4625fe2e",
+              "f2cd9a3c-0d10-4bc8-b5c2-176d6431da7f",
+              "2cf67bfb-f3bf-40ee-bbf8-79025ac64d96",
+              "9b90ec4d-3640-4057-b4a5-d912d8beb0cf",
+              "cf00bec5-1242-45ab-9df3-ed7e8ef34ba4",
+              "e3aa67a6-4be0-4e05-a6b3-c9e734473f32",
+              "1f171584-fee7-4f84-a0ff-7d7bfc486533",
+              "2dd7311f-69ae-484d-a610-f34996750686",
+              "4c264c07-313c-4fe5-bca0-c804ed21a97b",
+              "03c1d38e-9bab-4bf2-8ada-26d567989624",
+              "8a0d4893-fa42-4954-b826-79ec1f72e8f7",
+              "e35e530a-45b0-4866-b32e-970dfb52b121",
+              "edd48bff-e267-47c6-97c0-36686e6e48d1"
+            ],
+            "total_request_count": 10,
+            "number_of_cycles": 9,
+            "builtin_tool_uses": 9,
+            "turn_duration": {
+              "secs": 84,
+              "nanos": 672985708
+            },
+            "end_reason": "UserTurnEnd",
+            "end_timestamp": "2026-09-02T11:21:24.522777Z",
+            "input_token_count": 0,
+            "output_token_count": 0,
+            "cache_read_input_token_count": 0,
+            "cache_write_input_token_count": 0,
+            "model": "auto",
+            "assistant_response_length": 3442,
+            "request_attempts": 10,
+            "context_usage_percentage": 25.9343,
+            "final_context_usage_percentage": 25.9343,
+            "metering_usage": [
+              {
+                "value": 0.4620193769485904,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.48560550049751255,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.4495813366500829,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.47672572454394696,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.47248229502487576,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.5025468699834162,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.4958305721393036,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.4551059434494196,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.5887638597014925,
+                "unit": "credit",
+                "unitPlural": "credits"
+              },
+              {
+                "value": 0.5470145728026534,
+                "unit": "credit",
+                "unitPlural": "credits"
+              }
+            ],
+            "user_prompt_length": 15
           }
         ],
         "last_context_usage": {
-          "percentage": 24.6785,
+          "percentage": 25.9343,
           "model_id": "auto"
         },
         "user_turn_start_request": null,
@@ -10250,7 +11000,7 @@
           "rate_multiplier": 1.0,
           "rate_unit": "Credit"
         },
-        "context_usage_percentage": 24.6785
+        "context_usage_percentage": 25.9343
       },
       "permissions": {
         "filesystem": {
@@ -55916,6 +56666,2808 @@
           {
             "kind": "text",
             "data": "Verified (test removed): with the query `\"diam\"` filtering down to `access.diameter`, launching it:\n- **Selects the right repo** — `access.diameter` is launched (the filtered selection is honored). ✓\n- **Clears the query** — `m.query` becomes empty on launch. ✓\n- **Cursor follows on return** — after the session finishes, the cursor lands on `access.diameter` in the now-unfiltered full list. ✓\n\nSo the search box resets to empty the moment you attach to or create a session, and the full list is shown when you return, with the cursor on the repo you just used. This applies to both create and attach since both go through `launchSelectedRepo`.\n\nBuilds, vets, gofmt-clean. Confirm with `go run .`: search `diam`, Enter into `access.diameter`, detach — the search box should be empty and the full list visible."
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "Prompt",
+      "data": {
+        "message_id": "5cb7aae2-4e00-44bb-bc06-d87c5a233b8f",
+        "content": [
+          {
+            "kind": "text",
+            "data": "Hmm i was thinking of ways we can use the space better, because right now its just the menu list with a lot of empty space to the left and right. What if we add another box t the right of the menu box that can display some info about the currently highlighter repo. Or will that reduce performance a lot?"
+          }
+        ],
+        "meta": {
+          "timestamp": 1788339065
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "ebdca335-5760-4e71-9bd0-25acc6714230",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Performance is not a concern at all — this is a terminal UI redrawing a few dozen lines of text on keypress. There's no rendering cost worth worrying about; a side info panel adds a handful of string operations per frame. So go for it purely on UX grounds.\n\nLet me think about the layout and what to show, then confirm with you before building.\n\n**Layout:** split the panel area horizontally into two boxes side by side using `lipgloss.JoinHorizontal`:\n- **Left** — the repo list (narrower now, e.g. ~40% or a fixed width).\n- **Right** — an info panel for the highlighted repo.\n\nThe width math needs care: the two boxes plus their borders must sum to `m.width`. I'd give the list a share and the info panel the rest, both using the same `panelInner`-style border/padding accounting we already have. The search box and footer stay full-width below.\n\n**What to show in the info panel** — this is the real question. Options, given what a `Repo` currently holds (`Alias`, `Path`, `Session`):\n- **Alias** and full **path** (path is often truncated in the list, so showing it in full here is genuinely useful)\n- **Session status** — active/inactive, and the session ID if running\n- Cheap **git info** read live from the repo: current branch, dirty/clean, last commit. This is the most valuable content, but it means running `git` (or reading `.git/HEAD`) per highlighted repo. Reading `.git/HEAD` for the branch is basically free; running `git status` is heavier but still fine if done lazily (only for the highlighted repo, maybe cached).\n\n**A design decision to make:** how much git info, and how to fetch it.\n- **Minimal (zero cost):** alias, full path, session status, branch (read from `.git/HEAD` directly — a single small file read, no subprocess).\n- **Richer (small cost):** add dirty/clean and last-commit via `git`, run as an async `tea.Cmd` when the highlight changes so it never blocks the UI, with a cache keyed by path.\n\nMy recommendation: start with the **minimal, zero-subprocess** version (alias, path, session, branch from `.git/HEAD`). It's instant, needs no async machinery, and already makes the space useful. We can layer in async `git status` later if you want dirty-state/commit info.\n\nTwo things I want your call on before I build:\n1. **What content** — minimal (alias/path/session/branch) to start, or do you want the richer git status/last-commit now (async)?\n2. **Behavior on narrow terminals** — if the terminal is too narrow to fit both boxes reasonably, should I collapse back to the single full-width list? (I'd recommend yes, with a width threshold.)\n\nOnce you confirm those, I'll implement it."
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "Prompt",
+      "data": {
+        "message_id": "51835b90-7806-47cf-800f-61d7c256df6e",
+        "content": [
+          {
+            "kind": "text",
+            "data": "I dont care about showing full path and session status we already have. But probably I want to show git info, like the branch name, and the last 5 commit titles"
+          }
+        ],
+        "meta": {
+          "timestamp": 1788347795
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "41b72d40-9b72-4450-978e-2392a835b45c",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Good — git info it is: current branch and the last 5 commit titles. Let me think about how to fetch it, because that decision shapes the implementation.\n\n**Branch** — cheap: read `.git/HEAD`, which contains `ref: refs/heads/<branch>`. A single small file read, no subprocess. (Detached HEAD would contain a raw SHA; I'll handle that.)\n\n**Last 5 commit titles** — this needs `git log --format=%s -n 5`. That's a subprocess. Two ways to run it:\n- **Async** (`tea.Cmd`): fire it when the highlight changes, deliver results via a message, cache by path. Never blocks the UI even on a slow/large repo. More machinery.\n- **Synchronous**: run it inline in `View`/on cursor move. Simpler, but `git log` runs on every highlight change and *could* stutter on a huge repo or slow disk, and running it in `View` (which fires every frame) would be wasteful.\n\nThe right approach is **async with a cache**: when the highlighted repo changes, kick off a `tea.Cmd` that runs `git log` for that path; store the result keyed by path so re-highlighting is instant and we don't re-run. This keeps the UI responsive regardless of repo size.\n\n**Layout:** split the panel row into list (left) + info (right) via `JoinHorizontal`, with a width threshold to collapse to just the list on narrow terminals (you didn't object, and it avoids a cramped mess).\n\nHere's my plan:\n\n1. **`repos` package**: `GitBranch(path) string` (reads `.git/HEAD`) and `GitRecentCommits(path, n) []string` (runs `git log`). Both tolerate non-repos / errors gracefully.\n2. **`ui`**: an async `tea.Cmd` (`gitInfoCmd`) + a `gitInfoMsg{path, branch, commits, err}`, a cache `map[string]gitInfo` on the model, and logic to trigger the fetch when the highlighted repo's path changes.\n3. **Rendering**: an info panel (`renderRepoInfo`) showing branch + commit titles; `View` joins list + info horizontally, collapsing on narrow width.\n4. **Triggering**: on `moveCursor` and after launch/return, if the highlighted repo's info isn't cached, emit the fetch `Cmd`.\n\nOne implementation nuance: `moveCursor` currently returns nothing (it's called from the key switch which returns `m, nil`). To fire an async `Cmd` on highlight change, I'll have the relevant key cases return the `Cmd`. I'll compute \"did the highlighted repo change, and is its info uncached?\" and return `gitInfoCmd` when so.\n\nBefore I build — one quick confirmation: **collapse the info panel on narrow terminals** (below some width, show just the list), yes? And is a threshold around 80 columns reasonable, or do you want it always shown? Once you confirm I'll implement the whole thing."
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "Prompt",
+      "data": {
+        "message_id": "120bbe22-1d31-498d-aee1-ea8340ec92a4",
+        "content": [
+          {
+            "kind": "text",
+            "data": "sure we can collapse it on narrow terminals. Also this panel needs to be extendable, not physically but i mean the code. So that we can add more or remove information from it later if we want to add something else"
+          }
+        ],
+        "meta": {
+          "timestamp": 1788347888
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "7ede1df5-c32a-49a7-9dc5-04b3b46963bf",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Good call on extensibility. I'll structure the info panel as a list of **sections** — each section is a small self-contained unit (a title + content producer) — so adding/removing info later is just adding/removing a section, not rewriting the render logic. Let me build it.\n\nFirst, the `repos` package git helpers:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01N8sC4HgYbZ75HVZ2JmiVFS",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Add git branch and recent-commits helpers to the repos package.",
+                "command": "insert",
+                "path": "/Users/egriham/repos/misc/taco/repos/repos.go",
+                "content": "\n// GitBranch returns the current branch name of the repo at path by reading\n// .git/HEAD directly (no subprocess). For a detached HEAD it returns a short\n// commit SHA. Returns \"\" if it cannot be determined.\nfunc GitBranch(path string) string {\n\tdata, err := os.ReadFile(filepath.Join(path, \".git\", \"HEAD\"))\n\tif err != nil {\n\t\treturn \"\"\n\t}\n\thead := strings.TrimSpace(string(data))\n\tif ref, ok := strings.CutPrefix(head, \"ref: refs/heads/\"); ok {\n\t\treturn ref\n\t}\n\t// Detached HEAD: head is a raw SHA.\n\tif len(head) >= 7 {\n\t\treturn head[:7]\n\t}\n\treturn head\n}\n\n// GitRecentCommits returns up to n recent commit subject lines for the repo at\n// path, newest first. Returns nil (no error) if git is unavailable or the\n// command fails, so callers can render gracefully.\nfunc GitRecentCommits(path string, n int) []string {\n\tcmd := exec.Command(\"git\", \"-C\", path, \"log\", fmt.Sprintf(\"-n%d\", n), \"--format=%s\")\n\tout, err := cmd.Output()\n\tif err != nil {\n\t\treturn nil\n\t}\n\tlines := strings.Split(strings.TrimRight(string(out), \"\\n\"), \"\\n\")\n\tif len(lines) == 1 && lines[0] == \"\" {\n\t\treturn nil\n\t}\n\treturn lines\n}\n"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "7f78e199-7777-488f-bc72-cf9312a01f3f",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01N8sC4HgYbZ75HVZ2JmiVFS",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Successfully inserted 35 line(s) at end of file in /Users/egriham/repos/misc/taco/repos/repos.go."
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01N8sC4HgYbZ75HVZ2JmiVFS": {
+            "tool": {
+              "tool_use_purpose": "Add git branch and recent-commits helpers to the repos package.",
+              "kind": {
+                "BuiltIn": {
+                  "FileWrite": {
+                    "command": "insert",
+                    "path": "/Users/egriham/repos/misc/taco/repos/repos.go",
+                    "content": "\n// GitBranch returns the current branch name of the repo at path by reading\n// .git/HEAD directly (no subprocess). For a detached HEAD it returns a short\n// commit SHA. Returns \"\" if it cannot be determined.\nfunc GitBranch(path string) string {\n\tdata, err := os.ReadFile(filepath.Join(path, \".git\", \"HEAD\"))\n\tif err != nil {\n\t\treturn \"\"\n\t}\n\thead := strings.TrimSpace(string(data))\n\tif ref, ok := strings.CutPrefix(head, \"ref: refs/heads/\"); ok {\n\t\treturn ref\n\t}\n\t// Detached HEAD: head is a raw SHA.\n\tif len(head) >= 7 {\n\t\treturn head[:7]\n\t}\n\treturn head\n}\n\n// GitRecentCommits returns up to n recent commit subject lines for the repo at\n// path, newest first. Returns nil (no error) if git is unavailable or the\n// command fails, so callers can render gracefully.\nfunc GitRecentCommits(path string, n int) []string {\n\tcmd := exec.Command(\"git\", \"-C\", path, \"log\", fmt.Sprintf(\"-n%d\", n), \"--format=%s\")\n\tout, err := cmd.Output()\n\tif err != nil {\n\t\treturn nil\n\t}\n\tlines := strings.Split(strings.TrimRight(string(out), \"\\n\"), \"\\n\")\n\tif len(lines) == 1 && lines[0] == \"\" {\n\t\treturn nil\n\t}\n\treturn lines\n}\n",
+                    "insertLine": null
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "Successfully inserted 35 line(s) at end of file in /Users/egriham/repos/misc/taco/repos/repos.go."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "fedc6bd4-0955-4ead-953a-d6b36456e139",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "`GitRecentCommits` uses `os/exec` — need to add that import to `repos.go`:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01D2WQBdKieyVLXrjhwvtXyK",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Add os/exec import to repos.go for GitRecentCommits.",
+                "command": "strReplace",
+                "newStr": "import (\n\t\"bufio\"\n\t\"fmt\"\n\t\"os\"\n\t\"os/exec\"\n\t\"path/filepath\"\n\t\"sort\"\n\t\"strings\"\n\n\t\"github.com/hampusgrimskar/taco/session\"\n)",
+                "oldStr": "import (\n\t\"bufio\"\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"sort\"\n\t\"strings\"\n\n\t\"github.com/hampusgrimskar/taco/session\"\n)",
+                "path": "/Users/egriham/repos/misc/taco/repos/repos.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "406423a5-b8b6-4ba4-8793-f689386034fb",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01D2WQBdKieyVLXrjhwvtXyK",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/repos/repos.go."
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01D2WQBdKieyVLXrjhwvtXyK": {
+            "tool": {
+              "tool_use_purpose": "Add os/exec import to repos.go for GitRecentCommits.",
+              "kind": {
+                "BuiltIn": {
+                  "FileWrite": {
+                    "command": "strReplace",
+                    "path": "/Users/egriham/repos/misc/taco/repos/repos.go",
+                    "oldStr": "import (\n\t\"bufio\"\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"sort\"\n\t\"strings\"\n\n\t\"github.com/hampusgrimskar/taco/session\"\n)",
+                    "newStr": "import (\n\t\"bufio\"\n\t\"fmt\"\n\t\"os\"\n\t\"os/exec\"\n\t\"path/filepath\"\n\t\"sort\"\n\t\"strings\"\n\n\t\"github.com/hampusgrimskar/taco/session\"\n)",
+                    "replaceAll": false
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/repos/repos.go."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "28f3871a-a0de-4257-9c4e-17bd803ab466",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Now the info panel UI. I'll create `repo_info.go` with the section-based, extensible structure:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_017QPD5zh4Go313UsRFVUW1u",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Create the extensible, section-based repo info panel with async git fetch and caching.",
+                "command": "create",
+                "content": "package ui\n\nimport (\n\ttea \"charm.land/bubbletea/v2\"\n\t\"charm.land/lipgloss/v2\"\n\n\t\"github.com/hampusgrimskar/taco/repos\"\n)\n\n// gitInfo is the cached git metadata for a repo path.\ntype gitInfo struct {\n\tbranch  string\n\tcommits []string\n\tloaded  bool\n}\n\n// gitInfoMsg delivers the result of an async git-info fetch.\ntype gitInfoMsg struct {\n\tpath    string\n\tbranch  string\n\tcommits []string\n}\n\n// gitInfoCmd fetches git metadata for a repo path off the UI thread.\nfunc gitInfoCmd(path string) tea.Cmd {\n\treturn func() tea.Msg {\n\t\treturn gitInfoMsg{\n\t\t\tpath:    path,\n\t\t\tbranch:  repos.GitBranch(path),\n\t\t\tcommits: repos.GitRecentCommits(path, 5),\n\t\t}\n\t}\n}\n\n// infoWidthThreshold is the minimum terminal width at which the info panel is\n// shown alongside the list. Narrower than this, the list takes the full width.\nconst infoWidthThreshold = 90\n\n// infoPanelWidth is the outer width of the info panel.\nconst infoPanelWidth = 40\n\n// --- extensible section model ---\n//\n// The info panel is composed of independent sections. To add or remove\n// information, add or remove an entry in infoSections — each section decides\n// its own title and how to render its body from the given repo + git info.\n\n// infoSection is one titled block in the info panel.\ntype infoSection struct {\n\ttitle  string\n\trender func(repo *repos.Repo, info gitInfo) string\n}\n\n// infoSections is the ordered list of sections shown in the info panel.\n// Append or remove entries here to change what the panel displays.\nvar infoSections = []infoSection{\n\t{\n\t\ttitle: \"Branch\",\n\t\trender: func(_ *repos.Repo, info gitInfo) string {\n\t\t\tif info.branch == \"\" {\n\t\t\t\treturn muted(\"—\")\n\t\t\t}\n\t\t\treturn infoBranchStyle.Render(info.branch)\n\t\t},\n\t},\n\t{\n\t\ttitle: \"Recent commits\",\n\t\trender: func(_ *repos.Repo, info gitInfo) string {\n\t\t\tif len(info.commits) == 0 {\n\t\t\t\treturn muted(\"—\")\n\t\t\t}\n\t\t\tlines := make([]string, len(info.commits))\n\t\t\tfor i, c := range info.commits {\n\t\t\t\tlines[i] = \"• \" + c\n\t\t\t}\n\t\t\treturn lipgloss.JoinVertical(lipgloss.Left, lines...)\n\t\t},\n\t},\n}\n\n// --- styles ---\n\nvar (\n\tinfoPanelStyle = lipgloss.NewStyle().\n\t\t\tBorder(lipgloss.RoundedBorder()).\n\t\t\tBorderForeground(colorBorder).\n\t\t\tPadding(1, 2)\n\n\tinfoSectionTitleStyle = lipgloss.NewStyle().Bold(true).Foreground(colorAccent)\n\n\tinfoBranchStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(\"42\")) // green\n)\n\n// renderRepoInfo renders the info panel for the given repo, sized to the panel\n// height. Sections are drawn in order with a blank line between them.\nfunc (m model) renderRepoInfo(repo *repos.Repo, height int) string {\n\tblocks := make([]string, 0, len(infoSections)*3)\n\n\tif repo == nil {\n\t\tblocks = append(blocks, muted(\"No repo selected.\"))\n\t} else {\n\t\tinfo := m.gitCache[repo.Path]\n\t\tblocks = append(blocks, infoSectionTitleStyle.Render(repo.Alias), \"\")\n\t\tfor i, sec := range infoSections {\n\t\t\tblocks = append(blocks, infoSectionTitleStyle.Render(sec.title))\n\t\t\tblocks = append(blocks, sec.render(repo, info))\n\t\t\tif i < len(infoSections)-1 {\n\t\t\t\tblocks = append(blocks, \"\")\n\t\t\t}\n\t\t}\n\t}\n\n\tbody := lipgloss.JoinVertical(lipgloss.Left, blocks...)\n\n\ts := infoPanelStyle\n\t// Match Panel: .Width/.Height are total (border + padding included).\n\ts = s.Width(infoPanelWidth)\n\tif height > 0 {\n\t\ts = s.Height(height)\n\t}\n\treturn s.Render(body)\n}\n\n// selectedRepo returns the repo currently under the cursor, or nil.\nfunc (m model) selectedRepo() *repos.Repo {\n\tordered := orderedRepos(m.query)\n\tif len(ordered) == 0 || m.repoCursor < 0 || m.repoCursor >= len(ordered) {\n\t\treturn nil\n\t}\n\treturn ordered[m.repoCursor]\n}\n\n// ensureGitInfo returns a Cmd to fetch git info for the selected repo if it is\n// not already cached, or nil if nothing needs loading.\nfunc (m *model) ensureGitInfo() tea.Cmd {\n\trepo := m.selectedRepo()\n\tif repo == nil {\n\t\treturn nil\n\t}\n\tif m.gitCache == nil {\n\t\tm.gitCache = make(map[string]gitInfo)\n\t}\n\tif _, ok := m.gitCache[repo.Path]; ok {\n\t\treturn nil // already loaded (or loading result stored)\n\t}\n\t// Mark as loading to avoid firing duplicate commands.\n\tm.gitCache[repo.Path] = gitInfo{}\n\treturn gitInfoCmd(repo.Path)\n}\n",
+                "path": "/Users/egriham/repos/misc/taco/ui/repo_info.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "9cdae3e0-9d93-4d3c-8ae4-0859c43d2d30",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_017QPD5zh4Go313UsRFVUW1u",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Successfully created /Users/egriham/repos/misc/taco/ui/repo_info.go (149 lines)."
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_017QPD5zh4Go313UsRFVUW1u": {
+            "tool": {
+              "tool_use_purpose": "Create the extensible, section-based repo info panel with async git fetch and caching.",
+              "kind": {
+                "BuiltIn": {
+                  "FileWrite": {
+                    "command": "create",
+                    "path": "/Users/egriham/repos/misc/taco/ui/repo_info.go",
+                    "content": "package ui\n\nimport (\n\ttea \"charm.land/bubbletea/v2\"\n\t\"charm.land/lipgloss/v2\"\n\n\t\"github.com/hampusgrimskar/taco/repos\"\n)\n\n// gitInfo is the cached git metadata for a repo path.\ntype gitInfo struct {\n\tbranch  string\n\tcommits []string\n\tloaded  bool\n}\n\n// gitInfoMsg delivers the result of an async git-info fetch.\ntype gitInfoMsg struct {\n\tpath    string\n\tbranch  string\n\tcommits []string\n}\n\n// gitInfoCmd fetches git metadata for a repo path off the UI thread.\nfunc gitInfoCmd(path string) tea.Cmd {\n\treturn func() tea.Msg {\n\t\treturn gitInfoMsg{\n\t\t\tpath:    path,\n\t\t\tbranch:  repos.GitBranch(path),\n\t\t\tcommits: repos.GitRecentCommits(path, 5),\n\t\t}\n\t}\n}\n\n// infoWidthThreshold is the minimum terminal width at which the info panel is\n// shown alongside the list. Narrower than this, the list takes the full width.\nconst infoWidthThreshold = 90\n\n// infoPanelWidth is the outer width of the info panel.\nconst infoPanelWidth = 40\n\n// --- extensible section model ---\n//\n// The info panel is composed of independent sections. To add or remove\n// information, add or remove an entry in infoSections — each section decides\n// its own title and how to render its body from the given repo + git info.\n\n// infoSection is one titled block in the info panel.\ntype infoSection struct {\n\ttitle  string\n\trender func(repo *repos.Repo, info gitInfo) string\n}\n\n// infoSections is the ordered list of sections shown in the info panel.\n// Append or remove entries here to change what the panel displays.\nvar infoSections = []infoSection{\n\t{\n\t\ttitle: \"Branch\",\n\t\trender: func(_ *repos.Repo, info gitInfo) string {\n\t\t\tif info.branch == \"\" {\n\t\t\t\treturn muted(\"—\")\n\t\t\t}\n\t\t\treturn infoBranchStyle.Render(info.branch)\n\t\t},\n\t},\n\t{\n\t\ttitle: \"Recent commits\",\n\t\trender: func(_ *repos.Repo, info gitInfo) string {\n\t\t\tif len(info.commits) == 0 {\n\t\t\t\treturn muted(\"—\")\n\t\t\t}\n\t\t\tlines := make([]string, len(info.commits))\n\t\t\tfor i, c := range info.commits {\n\t\t\t\tlines[i] = \"• \" + c\n\t\t\t}\n\t\t\treturn lipgloss.JoinVertical(lipgloss.Left, lines...)\n\t\t},\n\t},\n}\n\n// --- styles ---\n\nvar (\n\tinfoPanelStyle = lipgloss.NewStyle().\n\t\t\tBorder(lipgloss.RoundedBorder()).\n\t\t\tBorderForeground(colorBorder).\n\t\t\tPadding(1, 2)\n\n\tinfoSectionTitleStyle = lipgloss.NewStyle().Bold(true).Foreground(colorAccent)\n\n\tinfoBranchStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(\"42\")) // green\n)\n\n// renderRepoInfo renders the info panel for the given repo, sized to the panel\n// height. Sections are drawn in order with a blank line between them.\nfunc (m model) renderRepoInfo(repo *repos.Repo, height int) string {\n\tblocks := make([]string, 0, len(infoSections)*3)\n\n\tif repo == nil {\n\t\tblocks = append(blocks, muted(\"No repo selected.\"))\n\t} else {\n\t\tinfo := m.gitCache[repo.Path]\n\t\tblocks = append(blocks, infoSectionTitleStyle.Render(repo.Alias), \"\")\n\t\tfor i, sec := range infoSections {\n\t\t\tblocks = append(blocks, infoSectionTitleStyle.Render(sec.title))\n\t\t\tblocks = append(blocks, sec.render(repo, info))\n\t\t\tif i < len(infoSections)-1 {\n\t\t\t\tblocks = append(blocks, \"\")\n\t\t\t}\n\t\t}\n\t}\n\n\tbody := lipgloss.JoinVertical(lipgloss.Left, blocks...)\n\n\ts := infoPanelStyle\n\t// Match Panel: .Width/.Height are total (border + padding included).\n\ts = s.Width(infoPanelWidth)\n\tif height > 0 {\n\t\ts = s.Height(height)\n\t}\n\treturn s.Render(body)\n}\n\n// selectedRepo returns the repo currently under the cursor, or nil.\nfunc (m model) selectedRepo() *repos.Repo {\n\tordered := orderedRepos(m.query)\n\tif len(ordered) == 0 || m.repoCursor < 0 || m.repoCursor >= len(ordered) {\n\t\treturn nil\n\t}\n\treturn ordered[m.repoCursor]\n}\n\n// ensureGitInfo returns a Cmd to fetch git info for the selected repo if it is\n// not already cached, or nil if nothing needs loading.\nfunc (m *model) ensureGitInfo() tea.Cmd {\n\trepo := m.selectedRepo()\n\tif repo == nil {\n\t\treturn nil\n\t}\n\tif m.gitCache == nil {\n\t\tm.gitCache = make(map[string]gitInfo)\n\t}\n\tif _, ok := m.gitCache[repo.Path]; ok {\n\t\treturn nil // already loaded (or loading result stored)\n\t}\n\t// Mark as loading to avoid firing duplicate commands.\n\tm.gitCache[repo.Path] = gitInfo{}\n\treturn gitInfoCmd(repo.Path)\n}\n"
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "Successfully created /Users/egriham/repos/misc/taco/ui/repo_info.go (149 lines)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "2766b55d-249d-420d-a705-526cfa14c88b",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Now wire into the model and `View`/`Update`. Add the cache field:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01GWLCM8kju3evA1ntHC98Dk",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Add the git-info cache to the model.",
+                "command": "strReplace",
+                "newStr": "\t// Repos tab state.\n\trepoCursor int\n\trepoScroll int    // index of the first visible row (scroll offset)\n\tquery      string // current search box contents\n\n\t// gitCache holds git metadata per repo path for the info panel.\n\tgitCache map[string]gitInfo",
+                "oldStr": "\t// Repos tab state.\n\trepoCursor int\n\trepoScroll int    // index of the first visible row (scroll offset)\n\tquery      string // current search box contents",
+                "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "15b85f26-68ed-4e27-b603-6e1c3973b884",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01GWLCM8kju3evA1ntHC98Dk",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Tool use was cancelled by the user"
+                }
+              ],
+              "status": "error"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01GWLCM8kju3evA1ntHC98Dk": {
+            "tool": null,
+            "result": "Cancelled"
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "66fa8cb8-a3c5-4eb5-9579-d89fe7f96ad0",
+        "content": [
+          {
+            "kind": "text",
+            "data": "Tool uses were interrupted, waiting for the next user prompt"
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "Prompt",
+      "data": {
+        "message_id": "762d38e1-1673-4678-8797-e10e2ed0e537",
+        "content": [
+          {
+            "kind": "text",
+            "data": "nvm. keep going"
+          }
+        ],
+        "meta": {
+          "timestamp": 1788347999
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "62ff6571-1b72-47ae-b9db-cec517c4c235",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": ""
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01DYQDWnWUm6fLPnN5fP4JFn",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Add the git-info cache to the model.",
+                "command": "strReplace",
+                "newStr": "\t// Repos tab state.\n\trepoCursor int\n\trepoScroll int    // index of the first visible row (scroll offset)\n\tquery      string // current search box contents\n\n\t// gitCache holds git metadata per repo path for the info panel.\n\tgitCache map[string]gitInfo",
+                "oldStr": "\t// Repos tab state.\n\trepoCursor int\n\trepoScroll int    // index of the first visible row (scroll offset)\n\tquery      string // current search box contents",
+                "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "5aab6b22-c50a-49ec-a74b-17e700d47330",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01DYQDWnWUm6fLPnN5fP4JFn",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01DYQDWnWUm6fLPnN5fP4JFn": {
+            "tool": {
+              "tool_use_purpose": "Add the git-info cache to the model.",
+              "kind": {
+                "BuiltIn": {
+                  "FileWrite": {
+                    "command": "strReplace",
+                    "path": "/Users/egriham/repos/misc/taco/ui/ui.go",
+                    "oldStr": "\t// Repos tab state.\n\trepoCursor int\n\trepoScroll int    // index of the first visible row (scroll offset)\n\tquery      string // current search box contents",
+                    "newStr": "\t// Repos tab state.\n\trepoCursor int\n\trepoScroll int    // index of the first visible row (scroll offset)\n\tquery      string // current search box contents\n\n\t// gitCache holds git metadata per repo path for the info panel.\n\tgitCache map[string]gitInfo",
+                    "replaceAll": false
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "50dab1fe-fb94-4547-8472-03bedfd1f4f1",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Now handle `gitInfoMsg` in `Update` and fire `ensureGitInfo` when the highlight changes. I'll make the navigation keys and the initial load return the fetch command. Let me update the `Update` message handling and key cases:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01BQj6w8gGyH2FgfvfZEyNLd",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Handle gitInfoMsg and fire git-info fetches on navigation, on initial size, and after returning from a session.",
+                "command": "strReplace",
+                "newStr": "\tcase tea.WindowSizeMsg:\n\t\tm.width = msg.Width\n\t\tm.height = msg.Height\n\t\t// Load git info for the initially selected repo.\n\t\treturn m, m.ensureGitInfo()\n\n\tcase gitInfoMsg:\n\t\tif m.gitCache == nil {\n\t\t\tm.gitCache = make(map[string]gitInfo)\n\t\t}\n\t\tm.gitCache[msg.path] = gitInfo{\n\t\t\tbranch:  msg.branch,\n\t\t\tcommits: msg.commits,\n\t\t\tloaded:  true,\n\t\t}\n\n\tcase scanDoneMsg:\n\t\tm.onScanDone(msg)",
+                "oldStr": "\tcase tea.WindowSizeMsg:\n\t\tm.width = msg.Width\n\t\tm.height = msg.Height\n\n\tcase scanDoneMsg:\n\t\tm.onScanDone(msg)",
+                "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "53ee1914-fceb-4300-b554-5ad027ed6b25",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01BQj6w8gGyH2FgfvfZEyNLd",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Failed to parse the tool use: The tool arguments failed validation: The provided old_str was not found in the file"
+                }
+              ],
+              "status": "error"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01BQj6w8gGyH2FgfvfZEyNLd": {
+            "tool": null,
+            "result": {
+              "Error": {
+                "Custom": "Failed to parse the tool use: The tool arguments failed validation: The provided old_str was not found in the file"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "4c073c6a-e6af-4a9b-b9d6-92951f32ba27",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Let me re-read the Update section to get the exact text:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01LPXfMSTSe4dDV28XmJtkmc",
+              "name": "read",
+              "input": {
+                "__tool_use_purpose": "Read the top of Update to insert gitInfoMsg handling and WindowSizeMsg fetch.",
+                "operations": [
+                  {
+                    "limit": 30,
+                    "mode": "Line",
+                    "offset": 62,
+                    "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "afc3333b-aae0-40ea-92a3-cbad07cb6dd9",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01LPXfMSTSe4dDV28XmJtkmc",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "}\n\nfunc (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {\n\tswitch msg := msg.(type) {\n\tcase tea.WindowSizeMsg:\n\t\tm.width = msg.Width\n\t\tm.height = msg.Height\n\n\tcase sessionFinishedMsg:\n\t\t// tmux exited (user detached or session ended); bubbletea resumed.\n\t\t// The launched repo has moved to the top, so follow it with the cursor.\n\t\tm.lastErr = msg.err\n\t\tif m.launchedAlias != \"\" {\n\t\t\tordered := orderedRepos(m.query)\n\t\t\tfor i, repo := range ordered {\n\t\t\t\tif repo.Alias == m.launchedAlias {\n\t\t\t\t\tm.repoCursor = i\n\t\t\t\t\tbreak\n\t\t\t\t}\n\t\t\t}\n\t\t\tm.clampScroll(len(ordered))\n\t\t\tm.launchedAlias = \"\"\n\t\t}\n\n\tcase scanDoneMsg:\n\t\tm.onScanDone(msg)\n\n\tcase tea.KeyPressMsg:\n\t\tkey := msg.String()\n"
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01LPXfMSTSe4dDV28XmJtkmc": {
+            "tool": {
+              "tool_use_purpose": "Read the top of Update to insert gitInfoMsg handling and WindowSizeMsg fetch.",
+              "kind": {
+                "BuiltIn": {
+                  "FileRead": {
+                    "operations": [
+                      {
+                        "mode": "Line",
+                        "path": "/Users/egriham/repos/misc/taco/ui/ui.go",
+                        "limit": 30,
+                        "offset": 62
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "}\n\nfunc (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {\n\tswitch msg := msg.(type) {\n\tcase tea.WindowSizeMsg:\n\t\tm.width = msg.Width\n\t\tm.height = msg.Height\n\n\tcase sessionFinishedMsg:\n\t\t// tmux exited (user detached or session ended); bubbletea resumed.\n\t\t// The launched repo has moved to the top, so follow it with the cursor.\n\t\tm.lastErr = msg.err\n\t\tif m.launchedAlias != \"\" {\n\t\t\tordered := orderedRepos(m.query)\n\t\t\tfor i, repo := range ordered {\n\t\t\t\tif repo.Alias == m.launchedAlias {\n\t\t\t\t\tm.repoCursor = i\n\t\t\t\t\tbreak\n\t\t\t\t}\n\t\t\t}\n\t\t\tm.clampScroll(len(ordered))\n\t\t\tm.launchedAlias = \"\"\n\t\t}\n\n\tcase scanDoneMsg:\n\t\tm.onScanDone(msg)\n\n\tcase tea.KeyPressMsg:\n\t\tkey := msg.String()\n"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "2c99546c-d970-4280-97b5-20bd4625fe2e",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": ""
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01BiWGYLbmx3SzCQ6Fw61pdq",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Add WindowSize git fetch and gitInfoMsg handling.",
+                "command": "strReplace",
+                "newStr": "\tcase tea.WindowSizeMsg:\n\t\tm.width = msg.Width\n\t\tm.height = msg.Height\n\t\t// Load git info for the initially selected repo.\n\t\treturn m, m.ensureGitInfo()\n\n\tcase gitInfoMsg:\n\t\tif m.gitCache == nil {\n\t\t\tm.gitCache = make(map[string]gitInfo)\n\t\t}\n\t\tm.gitCache[msg.path] = gitInfo{\n\t\t\tbranch:  msg.branch,\n\t\t\tcommits: msg.commits,\n\t\t\tloaded:  true,\n\t\t}\n\n\tcase sessionFinishedMsg:",
+                "oldStr": "\tcase tea.WindowSizeMsg:\n\t\tm.width = msg.Width\n\t\tm.height = msg.Height\n\n\tcase sessionFinishedMsg:",
+                "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "f2cd9a3c-0d10-4bc8-b5c2-176d6431da7f",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01BiWGYLbmx3SzCQ6Fw61pdq",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01BiWGYLbmx3SzCQ6Fw61pdq": {
+            "tool": {
+              "tool_use_purpose": "Add WindowSize git fetch and gitInfoMsg handling.",
+              "kind": {
+                "BuiltIn": {
+                  "FileWrite": {
+                    "command": "strReplace",
+                    "path": "/Users/egriham/repos/misc/taco/ui/ui.go",
+                    "oldStr": "\tcase tea.WindowSizeMsg:\n\t\tm.width = msg.Width\n\t\tm.height = msg.Height\n\n\tcase sessionFinishedMsg:",
+                    "newStr": "\tcase tea.WindowSizeMsg:\n\t\tm.width = msg.Width\n\t\tm.height = msg.Height\n\t\t// Load git info for the initially selected repo.\n\t\treturn m, m.ensureGitInfo()\n\n\tcase gitInfoMsg:\n\t\tif m.gitCache == nil {\n\t\t\tm.gitCache = make(map[string]gitInfo)\n\t\t}\n\t\tm.gitCache[msg.path] = gitInfo{\n\t\t\tbranch:  msg.branch,\n\t\t\tcommits: msg.commits,\n\t\t\tloaded:  true,\n\t\t}\n\n\tcase sessionFinishedMsg:",
+                    "replaceAll": false
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "2cf67bfb-f3bf-40ee-bbf8-79025ac64d96",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Now fire the fetch on navigation. The `up`/`down` cases call `m.moveCursor` and fall through to `return m, nil`. I'll change them to return `m.ensureGitInfo()` after moving:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01LQfzZzhjPo5e8ueDJZ2ud5",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Fetch git info for the newly highlighted repo after navigation.",
+                "command": "strReplace",
+                "newStr": "\t\t// Navigate within the active tab.\n\t\tcase \"up\":\n\t\t\tm.moveCursor(-1)\n\t\t\treturn m, m.ensureGitInfo()\n\t\tcase \"down\":\n\t\t\tm.moveCursor(1)\n\t\t\treturn m, m.ensureGitInfo()",
+                "oldStr": "\t\t// Navigate within the active tab.\n\t\tcase \"up\":\n\t\t\tm.moveCursor(-1)\n\t\tcase \"down\":\n\t\t\tm.moveCursor(1)",
+                "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "9b90ec4d-3640-4057-b4a5-d912d8beb0cf",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01LQfzZzhjPo5e8ueDJZ2ud5",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01LQfzZzhjPo5e8ueDJZ2ud5": {
+            "tool": {
+              "tool_use_purpose": "Fetch git info for the newly highlighted repo after navigation.",
+              "kind": {
+                "BuiltIn": {
+                  "FileWrite": {
+                    "command": "strReplace",
+                    "path": "/Users/egriham/repos/misc/taco/ui/ui.go",
+                    "oldStr": "\t\t// Navigate within the active tab.\n\t\tcase \"up\":\n\t\t\tm.moveCursor(-1)\n\t\tcase \"down\":\n\t\t\tm.moveCursor(1)",
+                    "newStr": "\t\t// Navigate within the active tab.\n\t\tcase \"up\":\n\t\t\tm.moveCursor(-1)\n\t\t\treturn m, m.ensureGitInfo()\n\t\tcase \"down\":\n\t\t\tm.moveCursor(1)\n\t\t\treturn m, m.ensureGitInfo()",
+                    "replaceAll": false
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "cf00bec5-1242-45ab-9df3-ed7e8ef34ba4",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Also fire it when the query changes (search narrows to a different repo) and when returning from a session. For search, the query-editing keys call `m.setQuery(...)`; let me have those return `ensureGitInfo` too. And the session-finished handler should refresh. Let me update the search/backspace/esc cases:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01FPovryrXuwkP9JB7f4GmGp",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Refresh git info when the search selection changes.",
+                "command": "strReplace",
+                "newStr": "\t\t// Clear the search query.\n\t\tcase \"esc\", \"alt+backspace\":\n\t\t\tm.setQuery(\"\")\n\t\t\treturn m, m.ensureGitInfo()\n\n\t\t// Delete the last search character.\n\t\tcase \"backspace\":\n\t\t\tif m.query != \"\" {\n\t\t\t\tm.setQuery(m.query[:len(m.query)-1])\n\t\t\t}\n\t\t\treturn m, m.ensureGitInfo()\n\n\t\t// Any single printable character is typed into the search box.\n\t\tdefault:\n\t\t\tif len(key) == 1 && key[0] >= 0x20 && key[0] < 0x7f {\n\t\t\t\tm.setQuery(m.query + key)\n\t\t\t\treturn m, m.ensureGitInfo()\n\t\t\t}\n\t\t}",
+                "oldStr": "\t\t// Clear the search query.\n\t\tcase \"esc\", \"alt+backspace\":\n\t\t\tm.setQuery(\"\")\n\n\t\t// Delete the last search character.\n\t\tcase \"backspace\":\n\t\t\tif m.query != \"\" {\n\t\t\t\tm.setQuery(m.query[:len(m.query)-1])\n\t\t\t}\n\n\t\t// Any single printable character is typed into the search box.\n\t\tdefault:\n\t\t\tif len(key) == 1 && key[0] >= 0x20 && key[0] < 0x7f {\n\t\t\t\tm.setQuery(m.query + key)\n\t\t\t}\n\t\t}",
+                "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "e3aa67a6-4be0-4e05-a6b3-c9e734473f32",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01FPovryrXuwkP9JB7f4GmGp",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01FPovryrXuwkP9JB7f4GmGp": {
+            "tool": {
+              "tool_use_purpose": "Refresh git info when the search selection changes.",
+              "kind": {
+                "BuiltIn": {
+                  "FileWrite": {
+                    "command": "strReplace",
+                    "path": "/Users/egriham/repos/misc/taco/ui/ui.go",
+                    "oldStr": "\t\t// Clear the search query.\n\t\tcase \"esc\", \"alt+backspace\":\n\t\t\tm.setQuery(\"\")\n\n\t\t// Delete the last search character.\n\t\tcase \"backspace\":\n\t\t\tif m.query != \"\" {\n\t\t\t\tm.setQuery(m.query[:len(m.query)-1])\n\t\t\t}\n\n\t\t// Any single printable character is typed into the search box.\n\t\tdefault:\n\t\t\tif len(key) == 1 && key[0] >= 0x20 && key[0] < 0x7f {\n\t\t\t\tm.setQuery(m.query + key)\n\t\t\t}\n\t\t}",
+                    "newStr": "\t\t// Clear the search query.\n\t\tcase \"esc\", \"alt+backspace\":\n\t\t\tm.setQuery(\"\")\n\t\t\treturn m, m.ensureGitInfo()\n\n\t\t// Delete the last search character.\n\t\tcase \"backspace\":\n\t\t\tif m.query != \"\" {\n\t\t\t\tm.setQuery(m.query[:len(m.query)-1])\n\t\t\t}\n\t\t\treturn m, m.ensureGitInfo()\n\n\t\t// Any single printable character is typed into the search box.\n\t\tdefault:\n\t\t\tif len(key) == 1 && key[0] >= 0x20 && key[0] < 0x7f {\n\t\t\t\tm.setQuery(m.query + key)\n\t\t\t\treturn m, m.ensureGitInfo()\n\t\t\t}\n\t\t}",
+                    "replaceAll": false
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "1f171584-fee7-4f84-a0ff-7d7bfc486533",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Now the layout in `View`: join the list and info panel horizontally when the terminal is wide enough. Let me update the repos `default` render case:"
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01HUatXuinb7rEL8NiGnmevt",
+              "name": "write",
+              "input": {
+                "__tool_use_purpose": "Render list + info panel side by side when wide enough; collapse to list-only otherwise.",
+                "command": "strReplace",
+                "newStr": "\t\tdefault:\n\t\t\tif m.width >= infoWidthThreshold {\n\t\t\t\t// List (left) + info panel (right), side by side.\n\t\t\t\tlistWidth := m.width - infoPanelWidth\n\t\t\t\t_, innerH := panelInner(listWidth, panelHeight)\n\t\t\t\tbody := m.renderReposTab(innerH)\n\t\t\t\tlistBox := PanelCentered(body, listWidth, panelHeight)\n\t\t\t\tinfoBox := m.renderRepoInfo(m.selectedRepo(), panelHeight)\n\t\t\t\tpanel = lipgloss.JoinHorizontal(lipgloss.Top, listBox, infoBox)\n\t\t\t} else {\n\t\t\t\t// Narrow terminal: list only, full width.\n\t\t\t\tbody := m.renderReposTab(innerHeight)\n\t\t\t\tpanel = PanelCentered(body, m.width, panelHeight)\n\t\t\t}",
+                "oldStr": "\t\tdefault:\n\t\t\tbody := m.renderReposTab(innerHeight)\n\t\t\tpanel = PanelCentered(body, m.width, panelHeight)",
+                "path": "/Users/egriham/repos/misc/taco/ui/ui.go"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "2dd7311f-69ae-484d-a610-f34996750686",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01HUatXuinb7rEL8NiGnmevt",
+              "content": [
+                {
+                  "kind": "text",
+                  "data": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01HUatXuinb7rEL8NiGnmevt": {
+            "tool": {
+              "tool_use_purpose": "Render list + info panel side by side when wide enough; collapse to list-only otherwise.",
+              "kind": {
+                "BuiltIn": {
+                  "FileWrite": {
+                    "command": "strReplace",
+                    "path": "/Users/egriham/repos/misc/taco/ui/ui.go",
+                    "oldStr": "\t\tdefault:\n\t\t\tbody := m.renderReposTab(innerHeight)\n\t\t\tpanel = PanelCentered(body, m.width, panelHeight)",
+                    "newStr": "\t\tdefault:\n\t\t\tif m.width >= infoWidthThreshold {\n\t\t\t\t// List (left) + info panel (right), side by side.\n\t\t\t\tlistWidth := m.width - infoPanelWidth\n\t\t\t\t_, innerH := panelInner(listWidth, panelHeight)\n\t\t\t\tbody := m.renderReposTab(innerH)\n\t\t\t\tlistBox := PanelCentered(body, listWidth, panelHeight)\n\t\t\t\tinfoBox := m.renderRepoInfo(m.selectedRepo(), panelHeight)\n\t\t\t\tpanel = lipgloss.JoinHorizontal(lipgloss.Top, listBox, infoBox)\n\t\t\t} else {\n\t\t\t\t// Narrow terminal: list only, full width.\n\t\t\t\tbody := m.renderReposTab(innerHeight)\n\t\t\t\tpanel = PanelCentered(body, m.width, panelHeight)\n\t\t\t}",
+                    "replaceAll": false
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Text": "Successfully replaced 1 occurrence(s) in /Users/egriham/repos/misc/taco/ui/ui.go."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "4c264c07-313c-4fe5-bca0-c804ed21a97b",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": ""
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_01TiQ91y4vZgcEHijL18ArvM",
+              "name": "shell",
+              "input": {
+                "__tool_use_purpose": "Build/vet/fmt the info-panel feature and check for issues.",
+                "command": "go build ./... 2>&1; echo \"=== vet ===\"; go vet ./... 2>&1; echo \"=== fmt ===\"; gofmt -l .",
+                "working_dir": "/Users/egriham/repos/misc/taco"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "03c1d38e-9bab-4bf2-8ada-26d567989624",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_01TiQ91y4vZgcEHijL18ArvM",
+              "content": [
+                {
+                  "kind": "json",
+                  "data": {
+                    "exit_status": "exit status: 0",
+                    "stdout": "=== vet ===\n=== fmt ===\n",
+                    "stderr": ""
+                  }
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_01TiQ91y4vZgcEHijL18ArvM": {
+            "tool": {
+              "tool_use_purpose": "Build/vet/fmt the info-panel feature and check for issues.",
+              "kind": {
+                "BuiltIn": {
+                  "ExecuteCmd": {
+                    "command": "go build ./... 2>&1; echo \"=== vet ===\"; go vet ./... 2>&1; echo \"=== fmt ===\"; gofmt -l .",
+                    "working_dir": "/Users/egriham/repos/misc/taco"
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Json": {
+                      "exit_status": "exit status: 0",
+                      "stdout": "=== vet ===\n=== fmt ===\n",
+                      "stderr": ""
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "8a0d4893-fa42-4954-b826-79ec1f72e8f7",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "Builds, vets, gofmt-clean. Now let me verify the behavior: the async fetch populates the cache, the panel renders sections, the layout collapses on narrow terminals, and the `ensureGitInfo` dedup works."
+          },
+          {
+            "kind": "toolUse",
+            "data": {
+              "toolUseId": "toolu_bdrk_014yV1kGHFzu1YEyBx5iPYAa",
+              "name": "shell",
+              "input": {
+                "__tool_use_purpose": "Test git helpers against a real temp git repo, and the info-panel caching/section rendering + collapse behavior.",
+                "command": "cat > repos/zz_git_test.go <<'EOF'\npackage repos\n\nimport (\n\t\"os/exec\"\n\t\"testing\"\n)\n\nfunc TestGitBranchAndCommits(t *testing.T) {\n\tdir := t.TempDir()\n\trun := func(args ...string) {\n\t\tc := exec.Command(\"git\", append([]string{\"-C\", dir}, args...)...)\n\t\tc.Env = append(c.Environ(),\n\t\t\t\"GIT_AUTHOR_NAME=t\", \"GIT_AUTHOR_EMAIL=t@t\",\n\t\t\t\"GIT_COMMITTER_NAME=t\", \"GIT_COMMITTER_EMAIL=t@t\")\n\t\tif out, err := c.CombinedOutput(); err != nil {\n\t\t\tt.Fatalf(\"git %v: %v\\n%s\", args, err, out)\n\t\t}\n\t}\n\trun(\"init\", \"-b\", \"main\")\n\trun(\"commit\", \"--allow-empty\", \"-m\", \"first commit\")\n\trun(\"commit\", \"--allow-empty\", \"-m\", \"second commit\")\n\n\tif b := GitBranch(dir); b != \"main\" {\n\t\tt.Fatalf(\"branch = %q, want main\", b)\n\t}\n\tcommits := GitRecentCommits(dir, 5)\n\tif len(commits) != 2 || commits[0] != \"second commit\" || commits[1] != \"first commit\" {\n\t\tt.Fatalf(\"commits = %v\", commits)\n\t}\n\t// Non-repo path returns empty gracefully.\n\tif GitBranch(t.TempDir()) != \"\" || GitRecentCommits(t.TempDir(), 5) != nil {\n\t\tt.Fatalf(\"non-repo should return empty\")\n\t}\n}\nEOF\ngo test ./repos/ -run TestGitBranchAndCommits -v 2>&1 | tail -8\nrm -f repos/zz_git_test.go\n\ncat > ui/zz_info_test.go <<'EOF'\npackage ui\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"github.com/hampusgrimskar/taco/repos\"\n)\n\nfunc TestEnsureGitInfoDedup(t *testing.T) {\n\trepos.Instance = []*repos.Repo{{Alias: \"api\", Path: \"/x/api\"}}\n\tm := model{activeTab: TabRepos}\n\tcmd1 := m.ensureGitInfo() // first time -> should return a Cmd\n\tif cmd1 == nil {\n\t\tt.Fatal(\"expected a fetch Cmd on first call\")\n\t}\n\tcmd2 := m.ensureGitInfo() // already marked loading -> no Cmd\n\tif cmd2 != nil {\n\t\tt.Fatal(\"expected no Cmd when already cached/loading\")\n\t}\n}\n\nfunc TestInfoPanelRendersSections(t *testing.T) {\n\trepos.Instance = []*repos.Repo{{Alias: \"api\", Path: \"/x/api\"}}\n\tm := model{activeTab: TabRepos, gitCache: map[string]gitInfo{\n\t\t\"/x/api\": {branch: \"develop\", commits: []string{\"fix bug\", \"add feature\"}, loaded: true},\n\t}}\n\tout := m.renderRepoInfo(m.selectedRepo(), 20)\n\tfor _, want := range []string{\"api\", \"Branch\", \"develop\", \"Recent commits\", \"fix bug\", \"add feature\"} {\n\t\tif !strings.Contains(out, want) {\n\t\t\tt.Errorf(\"info panel missing %q\", want)\n\t\t}\n\t}\n}\nEOF\ngo test ./ui/ -run 'TestEnsureGitInfoDedup|TestInfoPanelRendersSections' -v 2>&1 | tail -10\nrm -f ui/zz_info_test.go",
+                "working_dir": "/Users/egriham/repos/misc/taco"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "ToolResults",
+      "data": {
+        "message_id": "e35e530a-45b0-4866-b32e-970dfb52b121",
+        "content": [
+          {
+            "kind": "toolResult",
+            "data": {
+              "toolUseId": "toolu_bdrk_014yV1kGHFzu1YEyBx5iPYAa",
+              "content": [
+                {
+                  "kind": "json",
+                  "data": {
+                    "exit_status": "exit status: 0",
+                    "stdout": "=== RUN   TestGitBranchAndCommits\n--- PASS: TestGitBranchAndCommits (0.20s)\nPASS\nok  \tgithub.com/hampusgrimskar/taco/repos\t0.650s\n=== RUN   TestEnsureGitInfoDedup\n--- PASS: TestEnsureGitInfoDedup (0.00s)\n=== RUN   TestInfoPanelRendersSections\n--- PASS: TestInfoPanelRendersSections (0.00s)\nPASS\nok  \tgithub.com/hampusgrimskar/taco/ui\t0.468s\n",
+                    "stderr": ""
+                  }
+                }
+              ],
+              "status": "success"
+            }
+          }
+        ],
+        "results": {
+          "toolu_bdrk_014yV1kGHFzu1YEyBx5iPYAa": {
+            "tool": {
+              "tool_use_purpose": "Test git helpers against a real temp git repo, and the info-panel caching/section rendering + collapse behavior.",
+              "kind": {
+                "BuiltIn": {
+                  "ExecuteCmd": {
+                    "command": "cat > repos/zz_git_test.go <<'EOF'\npackage repos\n\nimport (\n\t\"os/exec\"\n\t\"testing\"\n)\n\nfunc TestGitBranchAndCommits(t *testing.T) {\n\tdir := t.TempDir()\n\trun := func(args ...string) {\n\t\tc := exec.Command(\"git\", append([]string{\"-C\", dir}, args...)...)\n\t\tc.Env = append(c.Environ(),\n\t\t\t\"GIT_AUTHOR_NAME=t\", \"GIT_AUTHOR_EMAIL=t@t\",\n\t\t\t\"GIT_COMMITTER_NAME=t\", \"GIT_COMMITTER_EMAIL=t@t\")\n\t\tif out, err := c.CombinedOutput(); err != nil {\n\t\t\tt.Fatalf(\"git %v: %v\\n%s\", args, err, out)\n\t\t}\n\t}\n\trun(\"init\", \"-b\", \"main\")\n\trun(\"commit\", \"--allow-empty\", \"-m\", \"first commit\")\n\trun(\"commit\", \"--allow-empty\", \"-m\", \"second commit\")\n\n\tif b := GitBranch(dir); b != \"main\" {\n\t\tt.Fatalf(\"branch = %q, want main\", b)\n\t}\n\tcommits := GitRecentCommits(dir, 5)\n\tif len(commits) != 2 || commits[0] != \"second commit\" || commits[1] != \"first commit\" {\n\t\tt.Fatalf(\"commits = %v\", commits)\n\t}\n\t// Non-repo path returns empty gracefully.\n\tif GitBranch(t.TempDir()) != \"\" || GitRecentCommits(t.TempDir(), 5) != nil {\n\t\tt.Fatalf(\"non-repo should return empty\")\n\t}\n}\nEOF\ngo test ./repos/ -run TestGitBranchAndCommits -v 2>&1 | tail -8\nrm -f repos/zz_git_test.go\n\ncat > ui/zz_info_test.go <<'EOF'\npackage ui\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"github.com/hampusgrimskar/taco/repos\"\n)\n\nfunc TestEnsureGitInfoDedup(t *testing.T) {\n\trepos.Instance = []*repos.Repo{{Alias: \"api\", Path: \"/x/api\"}}\n\tm := model{activeTab: TabRepos}\n\tcmd1 := m.ensureGitInfo() // first time -> should return a Cmd\n\tif cmd1 == nil {\n\t\tt.Fatal(\"expected a fetch Cmd on first call\")\n\t}\n\tcmd2 := m.ensureGitInfo() // already marked loading -> no Cmd\n\tif cmd2 != nil {\n\t\tt.Fatal(\"expected no Cmd when already cached/loading\")\n\t}\n}\n\nfunc TestInfoPanelRendersSections(t *testing.T) {\n\trepos.Instance = []*repos.Repo{{Alias: \"api\", Path: \"/x/api\"}}\n\tm := model{activeTab: TabRepos, gitCache: map[string]gitInfo{\n\t\t\"/x/api\": {branch: \"develop\", commits: []string{\"fix bug\", \"add feature\"}, loaded: true},\n\t}}\n\tout := m.renderRepoInfo(m.selectedRepo(), 20)\n\tfor _, want := range []string{\"api\", \"Branch\", \"develop\", \"Recent commits\", \"fix bug\", \"add feature\"} {\n\t\tif !strings.Contains(out, want) {\n\t\t\tt.Errorf(\"info panel missing %q\", want)\n\t\t}\n\t}\n}\nEOF\ngo test ./ui/ -run 'TestEnsureGitInfoDedup|TestInfoPanelRendersSections' -v 2>&1 | tail -10\nrm -f ui/zz_info_test.go",
+                    "working_dir": "/Users/egriham/repos/misc/taco"
+                  }
+                }
+              }
+            },
+            "result": {
+              "Success": {
+                "items": [
+                  {
+                    "Json": {
+                      "exit_status": "exit status: 0",
+                      "stdout": "=== RUN   TestGitBranchAndCommits\n--- PASS: TestGitBranchAndCommits (0.20s)\nPASS\nok  \tgithub.com/hampusgrimskar/taco/repos\t0.650s\n=== RUN   TestEnsureGitInfoDedup\n--- PASS: TestEnsureGitInfoDedup (0.00s)\n=== RUN   TestInfoPanelRendersSections\n--- PASS: TestInfoPanelRendersSections (0.00s)\nPASS\nok  \tgithub.com/hampusgrimskar/taco/ui\t0.468s\n",
+                      "stderr": ""
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "version": "v1",
+      "kind": "AssistantMessage",
+      "data": {
+        "message_id": "edd48bff-e267-47c6-97c0-36686e6e48d1",
+        "content": [
+          {
+            "kind": "thinking",
+            "data": {
+              "text": "",
+              "signature": null,
+              "redactedContent": [
+                46,
+                75,
+                84,
+                82,
+                126,
+                126,
+                101,
+                121,
+                74,
+                108,
+                98,
+                109,
+                78,
+                121,
+                101,
+                88,
+                66,
+                48,
+                97,
+                87,
+                57,
+                117,
+                85,
+                109,
+                86,
+                110,
+                97,
+                87,
+                57,
+                117,
+                73,
+                106,
+                112,
+                117,
+                100,
+                87,
+                120,
+                115,
+                76,
+                67,
+                74,
+                116,
+                98,
+                50,
+                82,
+                108,
+                98,
+                69,
+                104,
+                104,
+                99,
+                50,
+                103,
+                105,
+                79,
+                105,
+                74,
+                68,
+                98,
+                69,
+                78,
+                110,
+                90,
+                70,
+                108,
+                105,
+                82,
+                72,
+                104,
+                116,
+                77,
+                106,
+                65,
+                105,
+                76,
+                67,
+                74,
+                122,
+                98,
+                71,
+                57,
+                48,
+                99,
+                121,
+                73,
+                54,
+                87,
+                49,
+                48,
+                115,
+                73,
+                110,
+                89,
+                105,
+                79,
+                106,
+                70,
+                57
+              ],
+              "modelId": "auto"
+            }
+          },
+          {
+            "kind": "text",
+            "data": "All verified (tests removed):\n- **Git helpers** — against a real temp repo: `GitBranch` returns `main`, `GitRecentCommits` returns the last commits newest-first (`second commit`, `first commit`), and non-repo paths return empty gracefully. ✓\n- **Fetch dedup** — `ensureGitInfo` returns a `Cmd` the first time a repo is highlighted and `nil` afterward (no duplicate fetches). ✓\n- **Section rendering** — the panel shows the alias, `Branch`/`develop`, and `Recent commits`/commit titles. ✓\n\nFeature summary:\n\n**Layout** — when the terminal is ≥ 90 cols, the panel row splits into the repo list (left) and a 40-col info panel (right) via `JoinHorizontal`. Below that width it collapses to the full-width list.\n\n**Content** — the info panel shows the highlighted repo's alias, current **branch**, and **last 5 commit titles**.\n\n**Performance** — git data is fetched **asynchronously** (`tea.Cmd`) when the highlight changes and **cached per path**, so navigation never blocks and re-highlighting is instant. Branch is read straight from `.git/HEAD` (no subprocess); commits use `git log`.\n\n**Extensibility (as you asked)** — the panel is built from an ordered `infoSections` slice in `repo_info.go`. Each section is `{title, render(repo, gitInfo) string}`. To add or remove information later, you just add/remove an entry in `infoSections` — no changes to the render loop or layout. The `gitInfo` struct is where you'd add new cached fields (e.g. dirty state) if a future section needs them.\n\nBuilds, vets, gofmt-clean.\n\n**Verification status:** git logic, caching/dedup, and section rendering are test-verified. The side-by-side layout, width-collapse, and async refresh-on-navigation need a real TTY to confirm visually — please run `go run .` in a wide terminal, move through repos, and check the info panel updates with branch + commits (and that it disappears when you shrink the window below ~90 cols).\n\nOne note: the info fetch fires on `↑`/`↓` and on search changes, but not currently after a rename (the path is unchanged so the cache is still valid — fine) or when the very first repo loads before any keypress (handled via the `WindowSizeMsg` fetch). If you later add a section showing mutable state (like dirty status) that should refresh more eagerly, tell me and I'll add a refresh trigger."
           }
         ]
       }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -287,4 +288,39 @@ func AddRepo(path string) (string, error) {
 		return "", err
 	}
 	return alias, nil
+}
+
+// GitBranch returns the current branch name of the repo at path by reading
+// .git/HEAD directly (no subprocess). For a detached HEAD it returns a short
+// commit SHA. Returns "" if it cannot be determined.
+func GitBranch(path string) string {
+	data, err := os.ReadFile(filepath.Join(path, ".git", "HEAD"))
+	if err != nil {
+		return ""
+	}
+	head := strings.TrimSpace(string(data))
+	if ref, ok := strings.CutPrefix(head, "ref: refs/heads/"); ok {
+		return ref
+	}
+	// Detached HEAD: head is a raw SHA.
+	if len(head) >= 7 {
+		return head[:7]
+	}
+	return head
+}
+
+// GitRecentCommits returns up to n recent commit subject lines for the repo at
+// path, newest first. Returns nil (no error) if git is unavailable or the
+// command fails, so callers can render gracefully.
+func GitRecentCommits(path string, n int) []string {
+	cmd := exec.Command("git", "-C", path, "log", fmt.Sprintf("-n%d", n), "--format=%s")
+	out, err := cmd.Output()
+	if err != nil {
+		return nil
+	}
+	lines := strings.Split(strings.TrimRight(string(out), "\n"), "\n")
+	if len(lines) == 1 && lines[0] == "" {
+		return nil
+	}
+	return lines
 }

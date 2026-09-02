@@ -35,6 +35,10 @@ type model struct {
 	adding bool
 	add    addDialog
 
+	// Delete-confirmation modal state.
+	deleting bool
+	del      deleteDialog
+
 	// lastErr holds the most recent session error, shown in the footer.
 	lastErr error
 }
@@ -94,6 +98,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.updateAddDialog(key)
 		}
 
+		// When the delete confirmation is open it is modal.
+		if m.deleting {
+			m.updateDeleteDialog(key)
+			return m, nil
+		}
+
 		switch key {
 
 		// Quit.
@@ -107,6 +117,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Open the add-repos wizard.
 		case "ctrl+n":
 			m.openAddDialog()
+
+		// Open the delete confirmation for the selected repo.
+		case "ctrl+d":
+			m.openDeleteDialog()
 
 		// Switch tabs.
 		case "shift+tab", "left":
@@ -173,6 +187,8 @@ func (m model) View() tea.View {
 			panel = PanelCentered(m.renderRenameDialog(), m.width, panelHeight)
 		case m.adding:
 			panel = PanelCentered(m.renderAddDialog(innerHeight-8), m.width, panelHeight)
+		case m.deleting:
+			panel = PanelCentered(m.renderDeleteDialog(), m.width, panelHeight)
 		default:
 			body := m.renderReposTab(innerHeight)
 			panel = Panel(body, m.width, panelHeight)
@@ -185,7 +201,7 @@ func (m model) View() tea.View {
 
 	search := SearchBox(m.query, m.width)
 
-	footer := Help("↑/↓ navigate · ←/→ tabs · ctrl+n add · ctrl+r rename · enter open · ctrl+c quit")
+	footer := Help("↑/↓ navigate · ←/→ tabs · ctrl+n add · ctrl+r rename · ctrl+d delete · enter open · ctrl+c quit")
 	if m.lastErr != nil {
 		footer = Help("session error: "+m.lastErr.Error()) + "\n" + footer
 	}

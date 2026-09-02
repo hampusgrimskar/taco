@@ -158,3 +158,27 @@ func Delete(alias string) error {
 	}
 	return nil
 }
+
+// Rename changes a repo's alias from oldAlias to newAlias and persists the
+// change. It returns an error if newAlias is empty, if no repo has oldAlias,
+// or if another repo already uses newAlias.
+func Rename(oldAlias, newAlias string) error {
+	newAlias = strings.TrimSpace(newAlias)
+	if newAlias == "" {
+		return fmt.Errorf("alias cannot be empty")
+	}
+	if newAlias == oldAlias {
+		return nil // no-op
+	}
+
+	target := Find(oldAlias)
+	if target == nil {
+		return fmt.Errorf("no repo with alias %q", oldAlias)
+	}
+	if Find(newAlias) != nil {
+		return fmt.Errorf("alias %q already in use", newAlias)
+	}
+
+	target.Alias = newAlias
+	return sync()
+}

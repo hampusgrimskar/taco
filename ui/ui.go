@@ -27,6 +27,10 @@ type model struct {
 	// so the cursor can follow it after the list reorders.
 	launchedAlias string
 
+	// Rename dialog modal state.
+	renaming bool
+	dialog   renameDialog
+
 	// lastErr holds the most recent session error, shown in the footer.
 	lastErr error
 }
@@ -64,11 +68,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.KeyPressMsg:
-		switch msg.String() {
+		key := msg.String()
+
+		// When the rename dialog is open it is modal: it consumes all keys.
+		if m.renaming {
+			m.updateRenameDialog(key)
+			return m, nil
+		}
+
+		switch key {
 
 		// Quit.
 		case "ctrl+c", "ctrl+q":
 			return m, tea.Quit
+
+		// Open the rename dialog for the selected repo.
+		case "ctrl+r":
+			m.openRenameDialog()
 
 		// Switch tabs.
 		case "shift+tab", "left":
@@ -98,8 +114,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Any single printable character is typed into the search box.
 		default:
-			if s := msg.String(); len(s) == 1 && s[0] >= 0x20 && s[0] < 0x7f {
-				m.setQuery(m.query + s)
+			if len(key) == 1 && key[0] >= 0x20 && key[0] < 0x7f {
+				m.setQuery(m.query + key)
 			}
 		}
 	}
@@ -129,8 +145,13 @@ func (m model) View() tea.View {
 	var panel string
 	switch m.activeTab {
 	case TabRepos:
-		body := m.renderReposTab(innerHeight)
-		panel = Panel(body, m.width, panelHeight)
+		if m.renaming {
+			// Modal: show the dialog centered in the panel.
+			panel = PanelCentered(m.renderRenameDialog(), m.width, panelHeight)
+		} else {
+			body := m.renderReposTab(innerHeight)
+			panel = Panel(body, m.width, panelHeight)
+		}
 	case TabChats:
 		panel = PanelCentered(m.renderPlaceholder("Chats"), m.width, panelHeight)
 	case TabComingSoon:
@@ -139,7 +160,7 @@ func (m model) View() tea.View {
 
 	search := SearchBox(m.query, m.width)
 
-	footer := Help("↑/↓ navigate · ←/→ tabs · type to search · esc clear · enter open · ctrl+c quit")
+	footer := Help("↑/↓ navigate · ←/→ tabs · type to search · ctrl+r rename · enter open · ctrl+c quit")
 	if m.lastErr != nil {
 		footer = Help("session error: "+m.lastErr.Error()) + "\n" + footer
 	}

@@ -182,3 +182,109 @@ func Rename(oldAlias, newAlias string) error {
 	target.Alias = newAlias
 	return sync()
 }
+
+// HasPath reports whether a repo with the given filesystem path is already
+// registered.
+func HasPath(path string) bool {
+	for _, repo := range Instance {
+		if repo.Path == path {
+			return true
+		}
+	}
+	return false
+}
+
+// skipDirs are directory names never descended into during a scan.
+var skipDirs = map[string]bool{
+	"node_modules": true,
+	".git":         true,
+	"vendor":       true,
+}
+
+// isGitRepo reports whether dir contains a .git entry (file or directory).
+func isGitRepo(dir string) bool {
+	info, err := os.Stat(filepath.Join(dir, ".git"))
+	return err == nil && (info.IsDir() || info.Mode().IsRegular())
+}
+
+// ScanGitRepos walks root recursively and returns the paths of all git repos
+// found underneath it, sorted. It stops descending once a repo root is found
+// (so nested repos inside a repo are not reported), and skips hidden and
+// heavy directories.
+func ScanGitRepos(root string) ([]string, error) {
+	var found []string
+
+	var walk func(dir string) error
+	walk = func(dir string) error {
+		if isGitRepo(dir) {
+			found = append(found, dir)
+			return nil // do not descend into a repo
+		}
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			// Unreadable directory (permissions, etc.): skip it, don't fail
+			// the whole scan.
+			return nil
+		}
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
+			}
+			name := e.Name()
+			if skipDirs[name] || strings.HasPrefix(name, ".") {
+				continue
+			}
+			if err := walk(filepath.Join(dir, name)); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// The root itself may be a repo.
+	if err := walk(root); err != nil {
+		return nil, err
+	}
+	sort.Strings(found)
+	return found, nil
+}
+
+// ListDirs returns the immediate subdirectories of dir (names only, sorted),
+// skipping hidden directories. Used by the directory browser.
+func ListDirs(dir string) ([]string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	dirs := make([]string, 0, len(entries))
+	for _, e := range entries {
+		if e.IsDir() && !strings.HasPrefix(e.Name(), ".") {
+			dirs = append(dirs, e.Name())
+		}
+	}
+	sort.Strings(dirs)
+	return dirs, nil
+}
+
+// AddRepo registers the repo at path, deriving its alias from the directory
+// name. If that alias is already taken, a numeric suffix is appended to make
+// it unique (e.g. "web", "web-2"). If the path is already registered it is a
+// no-op. It persists the change and returns the alias used (empty if skipped).
+func AddRepo(path string) (string, error) {
+	if HasPath(path) {
+		return "", nil // already registered
+	}
+
+	base := filepath.Base(path)
+	alias := base
+	for n := 2; Find(alias) != nil; n++ {
+		alias = fmt.Sprintf("%s-%d", base, n)
+	}
+
+	Instance = append(Instance, &Repo{Alias: alias, Path: path})
+	if err := sync(); err != nil {
+		return "", err
+	}
+	return alias, nil
+}

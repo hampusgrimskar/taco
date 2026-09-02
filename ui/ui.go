@@ -31,8 +31,18 @@ type model struct {
 	renaming bool
 	dialog   renameDialog
 
+	// Add-repos wizard modal state.
+	adding bool
+	add    addDialog
+
 	// lastErr holds the most recent session error, shown in the footer.
 	lastErr error
+}
+
+// scanDoneMsg is delivered when an async git-repo scan completes.
+type scanDoneMsg struct {
+	paths []string
+	err   error
 }
 
 func initialModel() model {
@@ -67,6 +77,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.launchedAlias = ""
 		}
 
+	case scanDoneMsg:
+		m.onScanDone(msg)
+
 	case tea.KeyPressMsg:
 		key := msg.String()
 
@@ -74,6 +87,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.renaming {
 			m.updateRenameDialog(key)
 			return m, nil
+		}
+
+		// When the add wizard is open it is modal too (and may run a scan Cmd).
+		if m.adding {
+			return m, m.updateAddDialog(key)
 		}
 
 		switch key {
@@ -85,6 +103,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Open the rename dialog for the selected repo.
 		case "ctrl+r":
 			m.openRenameDialog()
+
+		// Open the add-repos wizard.
+		case "ctrl+n":
+			m.openAddDialog()
 
 		// Switch tabs.
 		case "shift+tab", "left":
@@ -145,10 +167,13 @@ func (m model) View() tea.View {
 	var panel string
 	switch m.activeTab {
 	case TabRepos:
-		if m.renaming {
+		switch {
+		case m.renaming:
 			// Modal: show the dialog centered in the panel.
 			panel = PanelCentered(m.renderRenameDialog(), m.width, panelHeight)
-		} else {
+		case m.adding:
+			panel = PanelCentered(m.renderAddDialog(innerHeight-8), m.width, panelHeight)
+		default:
 			body := m.renderReposTab(innerHeight)
 			panel = Panel(body, m.width, panelHeight)
 		}
@@ -160,7 +185,7 @@ func (m model) View() tea.View {
 
 	search := SearchBox(m.query, m.width)
 
-	footer := Help("↑/↓ navigate · ←/→ tabs · type to search · ctrl+r rename · enter open · ctrl+c quit")
+	footer := Help("↑/↓ navigate · ←/→ tabs · ctrl+n add · ctrl+r rename · enter open · ctrl+c quit")
 	if m.lastErr != nil {
 		footer = Help("session error: "+m.lastErr.Error()) + "\n" + footer
 	}

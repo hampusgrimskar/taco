@@ -108,27 +108,18 @@ func (m *model) commitRename() {
 
 // --- rendering ---
 
+// Theme-independent dialog styles.
 var (
-	dialogBoxStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(colorAccent).
-			Padding(1, 2)
-
 	dialogTitleStyle = lipgloss.NewStyle().Bold(true)
+	buttonStyle      = lipgloss.NewStyle().Padding(0, 3).Margin(0, 1)
+	dialogErrStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("196")) // red
+)
 
-	dialogInputStyle = lipgloss.NewStyle().
-				Border(lipgloss.NormalBorder()).
-				BorderForeground(colorBorder).
-				Padding(0, 1)
-
-	buttonStyle = lipgloss.NewStyle().Padding(0, 3).Margin(0, 1)
-
-	buttonFocusedStyle = buttonStyle.
-				Bold(true).
-				Foreground(lipgloss.Color("230")).
-				Background(colorAccent)
-
-	dialogErrStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("196")) // red
+// Theme-dependent dialog styles, (re)assigned by rebuildThemedStyles.
+var (
+	dialogBoxStyle     lipgloss.Style
+	dialogInputStyle   lipgloss.Style
+	buttonFocusedStyle lipgloss.Style
 )
 
 // renderRenameDialog draws the modal rename dialog.

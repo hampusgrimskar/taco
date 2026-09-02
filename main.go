@@ -9,6 +9,7 @@ import (
 
 	"github.com/hampusgrimskar/taco/commands"
 	"github.com/hampusgrimskar/taco/repos"
+	"github.com/hampusgrimskar/taco/settings"
 	"github.com/hampusgrimskar/taco/ui"
 )
 
@@ -17,6 +18,16 @@ func initializeRepos() {
 		fmt.Fprintln(os.Stderr, "error: ", err)
 		os.Exit(1)
 	}
+}
+
+// initializeSettings loads persisted settings and applies the saved theme.
+func initializeSettings() {
+	if err := settings.Init(); err != nil {
+		fmt.Fprintln(os.Stderr, "error: ", err)
+		os.Exit(1)
+	}
+	// Apply the persisted color theme (defaults to "Default" if unset).
+	ui.ApplyThemeByName(settings.Get("theme", "Default"))
 }
 
 // cleanupOnce guards terminateAllSessions so it runs at most once, whether
@@ -38,6 +49,7 @@ func terminateAllSessions() {
 
 func main() {
 	initializeRepos()
+	initializeSettings()
 
 	// Normal-exit and Ctrl+C path: bubbletea catches SIGINT itself and
 	// returns from Run(), so a deferred cleanup covers both.

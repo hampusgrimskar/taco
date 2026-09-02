@@ -247,10 +247,7 @@ func (m *model) onScanDone(msg scanDoneMsg) {
 
 // --- rendering ---
 
-var addDialogStyle = lipgloss.NewStyle().
-	Border(lipgloss.RoundedBorder()).
-	BorderForeground(colorAccent).
-	Padding(1, 2)
+var addDialogStyle lipgloss.Style
 
 // renderAddDialog draws the wizard for the current phase.
 func (m model) renderAddDialog(maxRows int) string {

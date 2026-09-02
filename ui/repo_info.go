@@ -81,14 +81,9 @@ var infoSections = []infoSection{
 // --- styles ---
 
 var (
-	infoPanelStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(colorBorder).
-			Padding(1, 2)
-
-	infoSectionTitleStyle = lipgloss.NewStyle().Bold(true).Foreground(colorAccent)
-
-	infoBranchStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("42")) // green
+	infoPanelStyle        lipgloss.Style
+	infoSectionTitleStyle lipgloss.Style
+	infoBranchStyle       lipgloss.Style
 )
 
 // renderRepoInfo renders the info panel for the given repo, sized to the panel

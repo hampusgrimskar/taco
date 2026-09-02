@@ -42,6 +42,10 @@ type model struct {
 	deleting bool
 	del      deleteDialog
 
+	// Settings modal state (global).
+	settingsOpen bool
+	settings     settingsForm
+
 	// lastErr holds the most recent session error, shown in the footer.
 	lastErr error
 }
@@ -102,6 +106,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		key := msg.String()
 
+		// Settings is a global modal: it opens from any tab and consumes keys.
+		if m.settingsOpen {
+			m.updateSettings(key)
+			return m, nil
+		}
+
 		// When the rename dialog is open it is modal: it consumes all keys.
 		if m.renaming {
 			m.updateRenameDialog(key)
@@ -124,6 +134,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Quit.
 		case "ctrl+c", "ctrl+q":
 			return m, tea.Quit
+
+		// Open global settings.
+		case "ctrl+p":
+			m.openSettings()
 
 		// Open the rename dialog for the selected repo.
 		case "ctrl+r":
@@ -229,9 +243,14 @@ func (m model) View() tea.View {
 		panel = PanelCentered(m.renderPlaceholder("Coming Soon"), m.width, panelHeight)
 	}
 
+	// Global settings modal overlays whatever tab is active.
+	if m.settingsOpen {
+		panel = PanelCentered(m.renderSettings(), m.width, panelHeight)
+	}
+
 	search := SearchBox(m.query, m.width)
 
-	footer := Help("↑/↓ navigate · ←/→ tabs · ctrl+n add · ctrl+r rename · ctrl+d delete · enter open · ctrl+c quit")
+	footer := Help("↑/↓ navigate · ←/→ tabs · ctrl+n add · ctrl+r rename · ctrl+d delete · ctrl+p settings · enter open · ctrl+c quit")
 	if m.lastErr != nil {
 		footer = Help("session error: "+m.lastErr.Error()) + "\n" + footer
 	}

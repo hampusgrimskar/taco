@@ -115,13 +115,15 @@ func panelInner(width, height int) (int, int) {
 
 // Panel wraps content in a bordered box sized to the given width/height.
 // When width/height are <= 0 the panel sizes to its content.
+// Note: lipgloss .Width/.Height set the TOTAL box size (border + padding
+// included), so we pass width/height directly.
 func Panel(content string, width, height int) string {
 	s := panelStyle
 	if width > 0 {
-		s = s.Width(width - panelBorderW - panelPaddingW)
+		s = s.Width(width)
 	}
 	if height > 0 {
-		s = s.Height(height - panelBorderH - panelPaddingH)
+		s = s.Height(height)
 	}
 	return s.Render(content)
 }
@@ -142,19 +144,20 @@ func Help(text string) string {
 	return helpStyle.Render(text)
 }
 
-// searchBoxStyle frames the search input.
+// searchBoxStyle frames the search input. It uses the same horizontal padding
+// as the panel so both boxes render to the same outer width.
 var searchBoxStyle = lipgloss.NewStyle().
 	Border(lipgloss.RoundedBorder()).
 	BorderForeground(colorBorder).
-	Padding(0, 1)
+	Padding(0, 2)
 
 // searchPromptStyle styles the leading search glyph.
 var searchPromptStyle = lipgloss.NewStyle().Foreground(colorAccent)
 
-// SearchBox renders the search input, sized to the given width. When the query
-// is empty a muted placeholder is shown.
+// SearchBox renders the search input, sized to match the panel's outer width.
+// When the query is empty a muted placeholder is shown.
 func SearchBox(query string, width int) string {
-	prompt := searchPromptStyle.Render("🔍 ")
+	prompt := searchPromptStyle.Render("> ")
 
 	var text string
 	if query == "" {
@@ -165,8 +168,9 @@ func SearchBox(query string, width int) string {
 
 	s := searchBoxStyle
 	if width > 0 {
-		// Border (2) + padding (2) reduce the inner content width.
-		s = s.Width(width - 4)
+		// lipgloss .Width is the total box width (border + padding included),
+		// matching Panel so both boxes span the same outer width.
+		s = s.Width(width)
 	}
 	return s.Render(prompt + text)
 }

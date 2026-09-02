@@ -20,6 +20,7 @@ type model struct {
 
 	// Repos tab state.
 	repoCursor int
+	repoScroll int    // index of the first visible row (scroll offset)
 	query      string // current search box contents
 
 	// launchedAlias is the repo whose session was most recently launched,
@@ -51,12 +52,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// The launched repo has moved to the top, so follow it with the cursor.
 		m.lastErr = msg.err
 		if m.launchedAlias != "" {
-			for i, repo := range orderedRepos(m.query) {
+			ordered := orderedRepos(m.query)
+			for i, repo := range ordered {
 				if repo.Alias == m.launchedAlias {
 					m.repoCursor = i
 					break
 				}
 			}
+			m.clampScroll(len(ordered))
 			m.launchedAlias = ""
 		}
 
@@ -105,24 +108,34 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() tea.View {
+	// Until the first WindowSizeMsg arrives we have no real dimensions.
+	// Render an empty full-screen view to avoid negative-size math.
+	if m.width <= 0 || m.height <= 0 {
+		v := tea.NewView("")
+		v.AltScreen = true
+		return v
+	}
+
 	// Tab bar across the top.
 	tabBar := TabBar(tabTitles, int(m.activeTab))
 
-	// Body for the active tab.
-	var body string
+	// Panel fills the window minus tab bar (1), search box (3), footer (1).
+	panelHeight := m.height - 5
+	_, innerHeight := panelInner(m.width, panelHeight)
+
+	// Body for the active tab. The repos list is windowed to the panel's
+	// inner height and rendered top-aligned so it scrolls rather than
+	// overflowing; placeholder tabs are centered.
+	var panel string
 	switch m.activeTab {
 	case TabRepos:
-		body = m.renderReposTab()
+		body := m.renderReposTab(innerHeight)
+		panel = Panel(body, m.width, panelHeight)
 	case TabChats:
-		body = m.renderPlaceholder("Chats")
+		panel = PanelCentered(m.renderPlaceholder("Chats"), m.width, panelHeight)
 	case TabComingSoon:
-		body = m.renderPlaceholder("Coming Soon")
+		panel = PanelCentered(m.renderPlaceholder("Coming Soon"), m.width, panelHeight)
 	}
-
-	// Wrap the body in a bordered panel that fills the window (minus the
-	// tab bar, search box, and footer rows), with the content centered inside.
-	panelHeight := m.height - 5 // tab bar (1) + search box (3, bordered) + footer (1)
-	panel := PanelCentered(body, m.width, panelHeight)
 
 	search := SearchBox(m.query, m.width)
 

@@ -151,10 +151,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+d":
 			m.openDeleteDialog()
 
-		// Switch tabs.
-		case "shift+tab", "left":
+		// Switch tabs (Tab / Shift+Tab only, so ←/→ are free for in-tab use).
+		case "shift+tab":
 			m.activeTab = m.prevTab()
-		case "tab", "right":
+		case "tab":
 			m.activeTab = m.nextTab()
 
 		// Navigate within the active tab.
@@ -250,7 +250,7 @@ func (m model) View() tea.View {
 
 	search := SearchBox(m.query, m.width)
 
-	footer := Help("↑/↓ navigate · ←/→ tabs · ctrl+n add · ctrl+r rename · ctrl+d delete · ctrl+p settings · enter open · ctrl+c quit")
+	footer := Help("↑/↓ navigate · tab switch tabs · ctrl+n add · ctrl+r rename · ctrl+d delete · ctrl+p settings · enter open · ctrl+c quit")
 	if m.lastErr != nil {
 		footer = Help("session error: "+m.lastErr.Error()) + "\n" + footer
 	}

@@ -99,24 +99,76 @@ func RepoRow(alias string, indicatorCol int, active, selected bool) string {
 	return rowStyle.Render(line)
 }
 
+// Panel border + padding costs, used to compute the inner content area.
+const (
+	panelBorderW  = 2 // left + right border
+	panelBorderH  = 2 // top + bottom border
+	panelPaddingW = 4 // left + right padding (2 each)
+	panelPaddingH = 2 // top + bottom padding (1 each)
+)
+
+// panelInner returns the content area (width, height) available inside a panel
+// of the given outer width/height, after border and padding.
+func panelInner(width, height int) (int, int) {
+	return width - panelBorderW - panelPaddingW, height - panelBorderH - panelPaddingH
+}
+
 // Panel wraps content in a bordered box sized to the given width/height.
 // When width/height are <= 0 the panel sizes to its content.
 func Panel(content string, width, height int) string {
 	s := panelStyle
 	if width > 0 {
-		// Account for the border (2) and horizontal padding (4).
-		s = s.Width(width - 2)
+		s = s.Width(width - panelBorderW - panelPaddingW)
 	}
 	if height > 0 {
-		// Account for the border (2) and vertical padding (2).
-		s = s.Height(height - 2)
+		s = s.Height(height - panelBorderH - panelPaddingH)
 	}
 	return s.Render(content)
+}
+
+// PanelCentered wraps content in a bordered box like Panel, but centers the
+// content both horizontally and vertically within the panel's inner area.
+func PanelCentered(content string, width, height int) string {
+	if width <= 0 || height <= 0 {
+		return Panel(content, width, height)
+	}
+	innerW, innerH := panelInner(width, height)
+	centered := lipgloss.Place(innerW, innerH, lipgloss.Center, lipgloss.Center, content)
+	return Panel(centered, width, height)
 }
 
 // Help renders footer help text in a muted style.
 func Help(text string) string {
 	return helpStyle.Render(text)
+}
+
+// searchBoxStyle frames the search input.
+var searchBoxStyle = lipgloss.NewStyle().
+	Border(lipgloss.RoundedBorder()).
+	BorderForeground(colorBorder).
+	Padding(0, 1)
+
+// searchPromptStyle styles the leading search glyph.
+var searchPromptStyle = lipgloss.NewStyle().Foreground(colorAccent)
+
+// SearchBox renders the search input, sized to the given width. When the query
+// is empty a muted placeholder is shown.
+func SearchBox(query string, width int) string {
+	prompt := searchPromptStyle.Render("🔍 ")
+
+	var text string
+	if query == "" {
+		text = muted("search…")
+	} else {
+		text = query + "▏" // simple block cursor
+	}
+
+	s := searchBoxStyle
+	if width > 0 {
+		// Border (2) + padding (2) reduce the inner content width.
+		s = s.Width(width - 4)
+	}
+	return s.Render(prompt + text)
 }
 
 // Center places content in the middle of the given box.

@@ -76,6 +76,9 @@ func (m *model) updateRenameDialog(key string) {
 			m.dialog.input = m.dialog.input[:len(m.dialog.input)-1]
 		}
 
+	case " ", "space":
+		m.dialog.input += " "
+
 	default:
 		// Any single printable character is typed into the input.
 		if len(key) == 1 && key[0] >= 0x20 && key[0] < 0x7f {

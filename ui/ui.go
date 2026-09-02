@@ -3,6 +3,8 @@ package ui
 import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+
+	"github.com/hampusgrimskar/taco/provider"
 )
 
 // sessionFinishedMsg is sent when a tmux session (run via tea.ExecProcess)
@@ -25,6 +27,16 @@ type model struct {
 
 	// gitCache holds git metadata per repo path for the info panel.
 	gitCache map[string]gitInfo
+
+	// Chats tab state.
+	provider    provider.Provider
+	chatCursor  int
+	chatting    bool
+	chat        chatWizard
+	chatDelete  bool
+	chatDelData chatDeleteData
+	chatRename  bool
+	chatRenData chatRenameData
 
 	// launchedAlias is the repo whose session was most recently launched,
 	// so the cursor can follow it after the list reorders.
@@ -56,9 +68,17 @@ type scanDoneMsg struct {
 	err   error
 }
 
+// chatFinishedMsg is delivered when a chat's tmux session is detached.
+type chatFinishedMsg struct {
+	dir    string
+	err    error
+	resume bool
+}
+
 func initialModel() model {
 	return model{
 		activeTab: TabRepos,
+		provider:  provider.NewKiro(),
 	}
 }
 
@@ -103,6 +123,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case scanDoneMsg:
 		m.onScanDone(msg)
 
+	case chatFinishedMsg:
+		m.onChatFinished(msg)
+
 	case tea.KeyPressMsg:
 		key := msg.String()
 
@@ -129,6 +152,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
+		// When the new-chat wizard is open it is modal (may run an Exec Cmd).
+		if m.chatting {
+			return m, m.updateChatWizard(key)
+		}
+
+		// When the chat delete confirmation is open it is modal.
+		if m.chatDelete {
+			m.updateChatDelete(key)
+			return m, nil
+		}
+
+		// When the chat rename dialog is open it is modal.
+		if m.chatRename {
+			m.updateChatRename(key)
+			return m, nil
+		}
+
 		switch key {
 
 		// Quit.
@@ -139,17 +179,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+p":
 			m.openSettings()
 
-		// Open the rename dialog for the selected repo.
+		// Open the rename dialog for the selected repo/chat.
 		case "ctrl+r":
-			m.openRenameDialog()
+			if m.activeTab == TabChats {
+				m.openChatRename()
+			} else {
+				m.openRenameDialog()
+			}
 
 		// Open the add-repos wizard.
 		case "ctrl+n":
 			m.openAddDialog()
 
-		// Open the delete confirmation for the selected repo.
+		// Open the delete confirmation for the selected repo/chat.
 		case "ctrl+d":
-			m.openDeleteDialog()
+			if m.activeTab == TabChats {
+				m.openChatDelete()
+			} else {
+				m.openDeleteDialog()
+			}
 
 		// Switch tabs (Tab / Shift+Tab only, so ←/→ are free for in-tab use).
 		case "shift+tab":
@@ -159,15 +207,36 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Navigate within the active tab.
 		case "up":
+			if m.activeTab == TabChats {
+				m.moveChatCursor(-1)
+				return m, nil
+			}
 			m.moveCursor(-1)
 			return m, m.ensureGitInfo()
 		case "down":
+			if m.activeTab == TabChats {
+				m.moveChatCursor(1)
+				return m, nil
+			}
 			m.moveCursor(1)
 			return m, m.ensureGitInfo()
 
-		// Launch / attach the selected repo's tmux session.
+		// Enter: resume a chat on the Chats tab, else launch a repo session.
 		case "enter":
+			if m.activeTab == TabChats {
+				return m.resumeSelectedChat()
+			}
 			return m.launchSelectedRepo()
+
+		// Space: on the Chats tab, start a new chat when not searching; once a
+		// search is in progress, space is part of the query. Elsewhere it is
+		// search input.
+		case " ", "space":
+			if m.activeTab == TabChats && m.query == "" {
+				return m, m.openChatWizard()
+			}
+			m.setQuery(m.query + " ")
+			return m, m.ensureGitInfo()
 
 		// Clear the search query.
 		case "esc", "alt+backspace":
@@ -238,7 +307,15 @@ func (m model) View() tea.View {
 			}
 		}
 	case TabChats:
-		panel = PanelCentered(m.renderPlaceholder("Chats"), m.width, panelHeight)
+		switch {
+		case m.chatDelete:
+			panel = PanelCentered(m.renderChatDelete(), m.width, panelHeight)
+		case m.chatRename:
+			panel = PanelCentered(m.renderChatRename(), m.width, panelHeight)
+		default:
+			// The table's own border is the panel box (fills the whole area).
+			panel = m.renderChatsTab(m.width, panelHeight)
+		}
 	case TabComingSoon:
 		panel = PanelCentered(m.renderPlaceholder("Coming Soon"), m.width, panelHeight)
 	}
@@ -250,7 +327,7 @@ func (m model) View() tea.View {
 
 	search := SearchBox(m.query, m.width)
 
-	footer := Help("↑/↓ navigate · tab switch tabs · ctrl+n add · ctrl+r rename · ctrl+d delete · ctrl+p settings · enter open · ctrl+c quit")
+	footer := Help(m.footerHint())
 	if m.lastErr != nil {
 		footer = Help("session error: "+m.lastErr.Error()) + "\n" + footer
 	}
@@ -261,6 +338,38 @@ func (m model) View() tea.View {
 	v := tea.NewView(content)
 	v.AltScreen = true
 	return v
+}
+
+// footerHint returns the key hint line appropriate to the current context:
+// an open modal's own keys take priority, otherwise the active tab's keys.
+func (m model) footerHint() string {
+	const common = "tab switch tabs · ctrl+p settings · ctrl+c quit"
+
+	switch {
+	case m.settingsOpen:
+		return "↑/↓ field · ←/→ change · esc/enter close"
+	case m.renaming:
+		return "type to edit · ←/→ buttons · enter confirm · esc cancel"
+	case m.deleting:
+		return "y delete · n/esc cancel · ←/→ switch · enter confirm"
+	case m.adding:
+		return "↑/↓ move · enter/→ open · ← up · ctrl+s scan here · esc cancel"
+	case m.chatting:
+		return "↑/↓ move · enter select/open · ← up · ctrl+s start here · esc cancel"
+	case m.chatDelete:
+		return "y remove · n/esc cancel · ←/→ switch · enter confirm"
+	case m.chatRename:
+		return "type to edit · ←/→ buttons · enter confirm · esc cancel"
+	}
+
+	switch m.activeTab {
+	case TabRepos:
+		return "↑/↓ navigate · type to search · ctrl+n add · ctrl+r rename · ctrl+d delete · enter open · " + common
+	case TabChats:
+		return "↑/↓ navigate · type to search · space new chat · ctrl+r rename · ctrl+d remove · enter resume · " + common
+	default:
+		return common
+	}
 }
 
 func CreateProgram() *tea.Program {

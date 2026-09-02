@@ -162,6 +162,11 @@ func rebuildThemedStyles() {
 		Padding(1, 2)
 	infoSectionTitleStyle = lipgloss.NewStyle().Bold(true).Foreground(colorAccent)
 	infoBranchStyle = lipgloss.NewStyle().Foreground(colorGood)
+
+	// chats_tab.go — full-width selected-row accent bar.
+	chatsSelectedRowStyle = lipgloss.NewStyle().
+		Foreground(colorFg).
+		Background(colorAccent)
 }
 
 // TabLabel renders a single tab label, styled by whether it is active.

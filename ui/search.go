@@ -6,4 +6,5 @@ func (m *model) setQuery(q string) {
 	m.query = q
 	m.repoCursor = 0
 	m.repoScroll = 0
+	m.chatCursor = 0
 }

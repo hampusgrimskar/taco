@@ -7,6 +7,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/hampusgrimskar/taco/chats"
 	"github.com/hampusgrimskar/taco/commands"
 	"github.com/hampusgrimskar/taco/repos"
 	"github.com/hampusgrimskar/taco/settings"
@@ -30,6 +31,14 @@ func initializeSettings() {
 	ui.ApplyThemeByName(settings.Get("theme", "Default"))
 }
 
+// initializeChats loads the saved chat sessions.
+func initializeChats() {
+	if err := chats.Init(); err != nil {
+		fmt.Fprintln(os.Stderr, "error: ", err)
+		os.Exit(1)
+	}
+}
+
 // cleanupOnce guards terminateAllSessions so it runs at most once, whether
 // triggered by the deferred call or the signal handler.
 var cleanupOnce sync.Once
@@ -50,6 +59,7 @@ func terminateAllSessions() {
 func main() {
 	initializeRepos()
 	initializeSettings()
+	initializeChats()
 
 	// Normal-exit and Ctrl+C path: bubbletea catches SIGINT itself and
 	// returns from Run(), so a deferred cleanup covers both.

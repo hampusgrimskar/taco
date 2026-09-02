@@ -176,8 +176,7 @@ func (m model) View() tea.View {
 	_, innerHeight := panelInner(m.width, panelHeight)
 
 	// Body for the active tab. The repos list is windowed to the panel's
-	// inner height and rendered top-aligned so it scrolls rather than
-	// overflowing; placeholder tabs are centered.
+	// inner height so it scrolls rather than overflowing, then centered.
 	var panel string
 	switch m.activeTab {
 	case TabRepos:
@@ -191,7 +190,7 @@ func (m model) View() tea.View {
 			panel = PanelCentered(m.renderDeleteDialog(), m.width, panelHeight)
 		default:
 			body := m.renderReposTab(innerHeight)
-			panel = Panel(body, m.width, panelHeight)
+			panel = PanelCentered(body, m.width, panelHeight)
 		}
 	case TabChats:
 		panel = PanelCentered(m.renderPlaceholder("Chats"), m.width, panelHeight)

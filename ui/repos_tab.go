@@ -131,6 +131,10 @@ func (m model) launchSelectedRepo() (tea.Model, tea.Cmd) {
 	// new position once the list reorders on return.
 	m.launchedAlias = repo.Alias
 
+	// Reset the search so the full list is shown again on return.
+	m.query = ""
+	m.repoScroll = 0
+
 	// Decide whether to create+attach (first launch) or just attach
 	// (session already exists from a previous launch this run).
 	var cmd *exec.Cmd
@@ -216,11 +220,6 @@ func (m model) renderReposTab(visibleRows int) string {
 		} else {
 			lines = append(lines, "")
 		}
-	}
-
-	// Pad with blank lines so the body is always exactly visibleRows tall.
-	for len(lines) < visibleRows {
-		lines = append(lines, "")
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)

@@ -13,6 +13,42 @@ import (
 	"github.com/hampusgrimskar/taco/session"
 )
 
+// pad2 pads s with trailing spaces to exactly w display cells.
+func pad2(s string, w int) string {
+	return s + spaces(w-lipgloss.Width(s))
+}
+
+// truncateRight shortens s to at most max display cells, appending "…".
+func truncateRight(s string, max int) string {
+	if max <= 0 {
+		return ""
+	}
+	if lipgloss.Width(s) <= max {
+		return s
+	}
+	if max == 1 {
+		return "…"
+	}
+	runes := []rune(s)
+	keep := max - 1
+	if keep > len(runes) {
+		keep = len(runes)
+	}
+	return string(runes[:keep]) + "…"
+}
+
+// spaces returns n space characters.
+func spaces(n int) string {
+	if n <= 0 {
+		return ""
+	}
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = ' '
+	}
+	return string(b)
+}
+
 // orderedRepos returns the repos in display order: active sessions first
 // (alphabetical), then the rest (alphabetical), filtered by a case-insensitive
 // substring match against query. This is the single source of truth for the
@@ -45,15 +81,17 @@ func orderedRepos(query string) []*repos.Repo {
 	return append(active, inactive...)
 }
 
-// visibleRepoRows returns how many repo rows fit in the panel's inner height
-// for the current terminal size.
+// visibleRepoRows returns how many repo data rows fit in the table for the
+// current terminal size, after the panel border/padding and the table's
+// header + rule lines.
 func (m model) visibleRepoRows() int {
 	panelHeight := m.height - 5
 	_, innerHeight := panelInner(m.width, panelHeight)
-	if innerHeight < 1 {
+	rows := innerHeight - 2 // table header + rule
+	if rows < 1 {
 		return 1
 	}
-	return innerHeight
+	return rows
 }
 
 // moveCursor adjusts the cursor for whichever tab is active, scrolling the
@@ -150,39 +188,77 @@ func (m model) launchSelectedRepo() (tea.Model, tea.Cmd) {
 	})
 }
 
-// renderReposTab draws the repo menu with active sessions first, each marked
-// by an indicator aligned in a column to the right of the longest alias. Only
-// visibleRows rows are drawn; the window scrolls to keep the cursor in view.
-func (m model) renderReposTab(visibleRows int) string {
-	// Before the first WindowSizeMsg (or on a tiny terminal) the computed
-	// height can be zero or negative; clamp so slice bounds stay valid.
-	if visibleRows < 1 {
-		visibleRows = 1
+// Repos table styles.
+var (
+	reposTableStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			Padding(1, 2)
+	reposHeaderStyle   lipgloss.Style // (re)built by theme
+	reposSelectedStyle lipgloss.Style // full-width selected-row bar
+	reposActiveStyle   lipgloss.Style // active status marker
+)
+
+// renderReposTab draws the repos table (Name · Branch · Status) filling the
+// given width/height. Active sessions sort first; the window scrolls to keep
+// the cursor visible.
+func (m model) renderReposTab(width, height int) string {
+	innerRows := height - 4 // border (2) + vertical padding (2)
+	if innerRows < 1 {
+		innerRows = 1
 	}
 
-	ordered := orderedRepos(m.query)
 	if len(repos.All()) == 0 {
-		return muted("No repos yet.")
+		return reposTableStyle.BorderForeground(colorBorder).
+			Width(width).Height(height).Render(muted("No repos yet. Press ctrl+n to add."))
 	}
+	ordered := orderedRepos(m.query)
 	if len(ordered) == 0 {
-		return muted("No matches.")
+		return reposTableStyle.BorderForeground(colorBorder).
+			Width(width).Height(height).Render(muted("No matches."))
 	}
 
-	// Find the longest alias so the indicator column aligns, then place the
-	// indicator 5 positions to the right of it.
-	longest := 0
-	for _, repo := range ordered {
-		if len(repo.Alias) > longest {
-			longest = len(repo.Alias)
-		}
+	// Column layout across the inner width.
+	// reposTableStyle: border (2) + horizontal padding (4) = 6.
+	innerW := width - 6
+	if innerW < 12 {
+		innerW = 12
 	}
-	indicatorCol := longest + 5
+	// Reserve one space on each side inside the row so text (and the selected
+	// highlight bar) isn't flush against the edges.
+	const sidePad = 1
+	contentW := innerW - 2*sidePad
+	if contentW < 8 {
+		contentW = 8
+	}
+	// Name and Branch share the width; Status is a fixed narrow column.
+	const statusW = 8
+	remaining := contentW - statusW
+	if remaining < 4 {
+		remaining = 4
+	}
+	nameW := remaining / 2
+	branchW := remaining - nameW
+	rowWidth := innerW
+
+	const colGap = 2
+	sp := spaces(sidePad)
+	fit := func(s string, w int) string { return pad2(truncateRight(s, w-colGap), w) }
+	rowText := func(name, branch, status string) string {
+		return sp + fit(name, nameW) + fit(branch, branchW) + status + sp
+	}
+
+	header := reposHeaderStyle.Render(rowText("Name", "Branch", "Status"))
+	rule := reposHeaderStyle.Render(strings.Repeat("─", innerW))
+
+	// Rows available after header + rule.
+	rowsAvail := innerRows - 2
+	if rowsAvail < 1 {
+		rowsAvail = 1
+	}
 
 	total := len(ordered)
-	rows := visibleItemRows(total, visibleRows)
+	rows := visibleItemRows(total, rowsAvail)
 
-	// Window using the persistent scroll offset; clamp defensively in case the
-	// terminal was resized since the last cursor move.
 	start := m.repoScroll
 	if start > total-rows {
 		start = total - rows
@@ -195,32 +271,44 @@ func (m model) renderReposTab(visibleRows int) string {
 		end = total
 	}
 
-	// Build exactly visibleRows lines so the panel height never changes as
-	// scroll hints appear or disappear. When scrolling is possible, the first
-	// and last lines are reserved as hint slots (blank when not scrolled).
-	lines := make([]string, 0, visibleRows)
+	lines := make([]string, 0, rowsAvail+2)
+	lines = append(lines, header, rule)
 
-	scrollable := total > visibleRows
-	if scrollable {
-		if start > 0 {
-			lines = append(lines, muted("  ↑ more"))
-		} else {
-			lines = append(lines, "")
-		}
+	if start > 0 {
+		lines = append(lines, muted("↑ more"))
 	}
-
 	for i := start; i < end; i++ {
 		repo := ordered[i]
-		lines = append(lines, RepoRow(repo.Alias, indicatorCol, repo.Session != nil, m.repoCursor == i))
-	}
+		branch := repos.GitBranch(repo.Path)
+		if branch == "" {
+			branch = "—"
+		}
+		active := repo.Session != nil
+		statusText := "idle"
+		if active {
+			statusText = "● active"
+		}
 
-	if scrollable {
-		if end < total {
-			lines = append(lines, muted("  ↓ more"))
+		selected := i == m.repoCursor
+		if selected {
+			// Selected row: keep all cells plain so the selected style's
+			// (contrasting) foreground applies uniformly and stays readable.
+			line := rowText(repo.Alias, branch, statusText)
+			lines = append(lines, reposSelectedStyle.Width(rowWidth).Render(line))
 		} else {
-			lines = append(lines, "")
+			// Unselected: color the status cell.
+			status := muted(statusText)
+			if active {
+				status = reposActiveStyle.Render(statusText)
+			}
+			lines = append(lines, rowText(repo.Alias, branch, status))
 		}
 	}
+	if end < total {
+		lines = append(lines, muted("↓ more"))
+	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+	table := lipgloss.JoinVertical(lipgloss.Left, lines...)
+	return reposTableStyle.BorderForeground(colorBorder).
+		Width(width).Height(height).Render(table)
 }

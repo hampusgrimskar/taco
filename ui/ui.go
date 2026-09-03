@@ -224,17 +224,14 @@ func (m model) View() tea.View {
 			panel = PanelCentered(m.renderDeleteDialog(), m.width, panelHeight)
 		default:
 			if m.width >= infoWidthThreshold {
-				// List (left) + info panel (right), side by side.
+				// Table (left) + info panel (right), side by side.
 				listWidth := m.width - infoPanelWidth
-				_, innerH := panelInner(listWidth, panelHeight)
-				body := m.renderReposTab(innerH)
-				listBox := PanelCentered(body, listWidth, panelHeight)
+				listBox := m.renderReposTab(listWidth, panelHeight)
 				infoBox := m.renderRepoInfo(m.selectedRepo(), panelHeight)
 				panel = lipgloss.JoinHorizontal(lipgloss.Top, listBox, infoBox)
 			} else {
-				// Narrow terminal: list only, full width.
-				body := m.renderReposTab(innerHeight)
-				panel = PanelCentered(body, m.width, panelHeight)
+				// Narrow terminal: table only, full width.
+				panel = m.renderReposTab(m.width, panelHeight)
 			}
 		}
 	case TabComingSoon:

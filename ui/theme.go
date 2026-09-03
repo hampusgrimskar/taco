@@ -127,7 +127,6 @@ func rebuildStyles() {
 // style is rebuilt in one pass when the theme changes.
 func rebuildThemedStyles() {
 	// theme.go
-	activeIndicatorStyle = lipgloss.NewStyle().Bold(true).Foreground(colorGood)
 	searchBoxStyle = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(colorBorder).
@@ -162,6 +161,13 @@ func rebuildThemedStyles() {
 		Padding(1, 2)
 	infoSectionTitleStyle = lipgloss.NewStyle().Bold(true).Foreground(colorAccent)
 	infoBranchStyle = lipgloss.NewStyle().Foreground(colorGood)
+
+	// repos_tab.go — table header, selected-row bar, active status marker.
+	reposHeaderStyle = lipgloss.NewStyle().Faint(true)
+	reposSelectedStyle = lipgloss.NewStyle().
+		Foreground(colorFg).
+		Background(colorAccent)
+	reposActiveStyle = lipgloss.NewStyle().Foreground(colorGood)
 }
 
 // TabLabel renders a single tab label, styled by whether it is active.
@@ -187,38 +193,6 @@ func Row(text string, selected bool) string {
 		return selectedRowStyle.Render("› " + text)
 	}
 	return rowStyle.Render("  " + text)
-}
-
-// activeIndicatorStyle marks repos with a running session.
-var activeIndicatorStyle lipgloss.Style
-
-// RepoRow renders a repo menu row with a cursor marker on the left and an
-// active-session indicator aligned to indicatorCol on the right. indicatorCol
-// is the column (measured from the start of the alias) where the indicator
-// is drawn, so all indicators line up regardless of alias length.
-func RepoRow(alias string, indicatorCol int, active, selected bool) string {
-	cursor := "  "
-	if selected {
-		cursor = "› "
-	}
-
-	// Pad the alias out to the indicator column so the indicator aligns.
-	pad := indicatorCol - len(alias)
-	if pad < 1 {
-		pad = 1
-	}
-	padding := strings.Repeat(" ", pad)
-
-	indicator := " "
-	if active {
-		indicator = activeIndicatorStyle.Render("●")
-	}
-
-	line := cursor + alias + padding + indicator
-	if selected {
-		return selectedRowStyle.Render(line)
-	}
-	return rowStyle.Render(line)
 }
 
 // Panel border + padding costs, used to compute the inner content area.

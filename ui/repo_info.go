@@ -76,6 +76,15 @@ var infoSections = []infoSection{
 			return lipgloss.JoinVertical(lipgloss.Left, lines...)
 		},
 	},
+	{
+		title: "Path",
+		render: func(repo *repos.Repo, _ gitInfo) string {
+			if repo == nil || repo.Path == "" {
+				return muted("—")
+			}
+			return muted(repo.Path)
+		},
+	},
 }
 
 // --- styles ---

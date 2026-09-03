@@ -5,12 +5,11 @@ type Tab int
 
 const (
 	TabRepos Tab = iota
-	TabChats
 	TabComingSoon
 )
 
 // tabTitles are the labels shown in the tab bar, in order.
-var tabTitles = []string{"Repos", "Chats", "Coming Soon"}
+var tabTitles = []string{"Repos", "Coming Soon"}
 
 // nextTab / prevTab cycle through the tabs.
 func (m model) nextTab() Tab {
